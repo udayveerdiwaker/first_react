@@ -1,7 +1,7 @@
-export function saveChat(chat: any) {
-  localStorage.setItem("chat", JSON.stringify(chat));
+export function getChats() {
+  return JSON.parse(localStorage.getItem("chats") || "[]");
 }
 
-export function loadChat() {
-  return JSON.parse(localStorage.getItem("chat") || "[]");
+export function saveChats(chats: any) {
+  localStorage.setItem("chats", JSON.stringify(chats));
 }
