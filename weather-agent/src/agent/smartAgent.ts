@@ -1,55 +1,20 @@
-import OpenAI from "openai";
 import { getWeather } from "../tools/weather";
 
-const client = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENROUTER_API_KEY,
-  baseURL: "https://openrouter.ai/api/v1",
-  defaultHeaders: {
-    "HTTP-Referer": "http://localhost:5173",
-    "X-Title": "Smart Agent App",
-  },
-  dangerouslyAllowBrowser: true,
-});
+/* ==============================
+   🧠 SYSTEM PROMPT
+============================== */
+// const systemPrompt = `
+// You are an intelligent AI assistant.
 
-// ✅ SINGLE CLEAN FUNCTION
-// const getSystemPrompt = (mode: string) => {
-//   switch (mode) {
-//     case "coding":
-//       return `
-// You are a senior software engineer.
-
-// - Give clean and correct code
-// - Explain step-by-step
-// - Use best practices
+// Rules:
+// - If user asks about weather → call getWeather tool
+// - Understand spelling mistakes (delgi = delhi)
+// - If user asks date/time/day → respond directly
+// - Do NOT generate code unless asked
 // `;
-
-//     case "teaching":
-//       return `
-// You are a friendly teacher.
-
-// - Explain in very simple language
-// - Use examples
-// - Break into steps
-// `;
-
-//     case "fun":
-//       return `
-// You are a funny AI assistant.
-
-// - Add humor and jokes
-// - Keep answers fun but helpful
-// `;
-
-//     default:
-//       return `
-// You are a smart professional AI assistant.
-
-// - Give clear and detailed answers
-// - Use bullet points
-// - Be structured and helpful
-// `;
-//   }
-// };
+/* ==============================
+   🧠 SYSTEM PROMPT
+============================== */
 const getSystemPrompt = (mode: string) => {
   const basePrompt = `
 You are an advanced AI assistant like ChatGPT.
@@ -124,79 +89,184 @@ You are a smart professional AI assistant.
       );
   }
 };
-// ✅ MAIN FUNCTION
-export async function runSmartAgent(
-  userInput: string,
-  chat: any[],
-  mode: string
-) {
-  try {
-    const response = await client.chat.completions.create({
-      model: "openai/gpt-4o-mini",
 
+/* ==============================
+   📅 DATE TOOL
+============================== */
+function getDateTime() {
+  const now = new Date();
+
+  return `
+📅 Date & Time
+
+🗓 ${now.toLocaleDateString()}
+📆 ${now.toLocaleDateString("en-US", { weekday: "long" })}
+⏰ ${now.toLocaleTimeString()}
+`;
+}
+
+/* ==============================
+   🧠 TOOL DETECTOR (AI decides)
+============================== */
+async function detectTool(userInput: string) {
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "openai/gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: getSystemPrompt(mode || "normal"),
-        },
+          content: `
+Decide which tool to use.
 
+Return ONLY:
+- "weather:city"
+- "date"
+- "none"
+          `,
+        },
+        { role: "user", content: userInput },
+      ],
+    }),
+  });
+
+  const data = await res.json();
+  return data.choices[0].message.content.toLowerCase();
+}
+
+/* ==============================
+   🚀 MAIN FUNCTION
+============================== */
+export async function runSmartAgentStream(
+  userInput: string,
+  chat: any[],
+  mode: string,
+  onChunk: (chunk: string) => void,
+  signal?: AbortSignal
+) {
+  /* ==============================
+     🧠 STEP 1: DETECT TOOL
+  ============================== */
+  const decision = await detectTool(userInput);
+
+  /* ==============================
+     📅 DATE TOOL
+  ============================== */
+  if (decision.includes("date")) {
+    const text = getDateTime();
+
+    let current = "";
+    for (let char of text) {
+      if (signal?.aborted) return current;
+
+      current += char;
+      onChunk(current);
+      await new Promise((r) => setTimeout(r, 5));
+    }
+
+    return text;
+  }
+
+  /* ==============================
+     🌦 WEATHER TOOL
+  ============================== */
+  if (decision.includes("weather")) {
+    try {
+      const city = decision.split(":")[1] || "Delhi";
+
+      const result = await getWeather(city);
+
+      if (!result || "error" in result) {
+        const err = "❌ Weather not found.";
+        onChunk(err);
+        return err;
+      }
+
+      const text = `
+🌦 Weather Report
+
+📍 ${result.city}
+🌡 ${result.temp}°C
+🌥 ${result.weather}
+💧 ${result.humidity}%
+🌬 ${result.wind} m/s
+`;
+
+      let current = "";
+      for (let char of text) {
+        if (signal?.aborted) return current;
+
+        current += char;
+        onChunk(current);
+        await new Promise((r) => setTimeout(r, 5));
+      }
+
+      return text;
+    } catch {
+      const err = "❌ Weather error";
+      onChunk(err);
+      return err;
+    }
+  }
+
+  /* ==============================
+     🤖 NORMAL STREAMING AI
+  ============================== */
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    signal,
+    headers: {
+      Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "openai/gpt-4o-mini",
+      stream: true,
+      messages: [
+        { role: "system", content: getSystemPrompt(mode || "normal") },
         ...chat.slice(-10).map((msg: any) => ({
           role: msg.role === "bot" ? "assistant" : "user",
           content: msg.text,
         })),
-
-        {
-          role: "user",
-          content: userInput,
-        },
+        { role: "user", content: userInput },
       ],
+    }),
+  });
 
-      temperature: 0.7,
-      max_tokens: 1000,
+  const reader = res.body?.getReader();
+  const decoder = new TextDecoder("utf-8");
 
-      tool_choice: "auto",
+  let fullText = "";
 
-      tools: [
-        {
-          type: "function",
-          function: {
-            name: "getWeather",
-            description: "Get weather of a city",
-            parameters: {
-              type: "object",
-              properties: {
-                city: { type: "string" },
-              },
-              required: ["city"],
-            },
-          },
-        },
-      ],
-    });
+  while (true) {
+    if (signal?.aborted) return fullText;
 
-    const msg = response.choices[0].message;
-    console.log(response);
-    // 🌦 Weather Tool
-    if (msg.tool_calls && msg.tool_calls.length > 0) {
-      const toolCall = msg.tool_calls[0];
+    const { done, value } = await reader!.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value);
+    const lines = chunk.split("\n").filter((l) => l.startsWith("data:"));
+
+    for (let line of lines) {
+      const json = line.replace("data: ", "");
+
+      if (json === "[DONE]") return fullText;
 
       try {
-        const args = JSON.parse(toolCall.function.arguments);
+        const parsed = JSON.parse(json);
+        const token = parsed.choices[0]?.delta?.content;
 
-        if (toolCall.function.name === "getWeather") {
-          const result = await getWeather(args.city);
-          return `🌤 ${result.city}: ${result.temp}°C, ${result.weather}`;
+        if (token) {
+          fullText += token;
+          onChunk(fullText);
         }
-      } catch (e) {
-        console.error("Tool error:", e);
-      }
+      } catch {}
     }
-
-    if (msg.content) return msg.content;
-
-    return "🤖 Sorry, I couldn't generate a response.";
-  } catch (err) {
-    console.error(err);
-    return "AI error 😢";
   }
+
+  return fullText;
 }

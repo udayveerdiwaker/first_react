@@ -7,21 +7,35 @@ export default function App() {
   const [chat, setChat] = useState<any[]>([]);
   const [chats, setChats] = useState<any[]>([]);
   const [chatIndex, setChatIndex] = useState<number | null>(null);
-
-  const [sidebarOpen, setSidebarOpen] = useState(false); // 🔥 NEW
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = getChats();
+    try {
+      const stored = getChats();
 
-    if (stored.length > 0) {
-      setChats(stored);
-      setChat(stored[stored.length - 1].messages);
-      setChatIndex(stored.length - 1);
+      if (stored && stored.length > 0) {
+        setChats(stored);
+        setChat(stored[stored.length - 1]?.messages || []);
+        setChatIndex(stored.length - 1);
+      }
+    } catch (err) {
+      console.error("Failed to load chats");
+    } finally {
+      setLoading(false);
     }
   }, []);
 
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center text-white">
+        Loading AI...
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-[#020617] via-[#020617] to-black text-white">
       {/* SIDEBAR */}
       <Sidebar
         chats={chats}
@@ -41,7 +55,7 @@ export default function App() {
         setChats={setChats}
         chatIndex={chatIndex}
         setChatIndex={setChatIndex}
-        setSidebarOpen={setSidebarOpen} // 🔥 pass toggle
+        setSidebarOpen={setSidebarOpen}
       />
     </div>
   );

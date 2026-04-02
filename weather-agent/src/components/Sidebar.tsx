@@ -97,17 +97,21 @@ export default function Sidebar({
         </div>
 
         {/* 📜 CHAT LIST */}
-        <div className="flex-1 overflow-y-auto px-2 space-y-1">
+        <div className="flex-1 overflow-y-auto px-2 space-y-2">
+          {/* <div className="flex items-center justify-between px-3 py-2 mb-2"> */}
+          <h2 className="text-xs uppercase tracking-wider text-gray-400 font-medium">
+            Chats
+          </h2>
           {filteredChats.map((c: any, i: number) => {
             const title = c.title || "New Chat";
 
             return (
               <div
                 key={i}
-                className={`group flex items-center justify-between p-3 rounded-xl cursor-pointer transition text-sm ${
+                className={`group flex items-center justify-between p-3 rounded-xl cursor-pointer transition text-sm  border-l-2  ${
                   i === chatIndex
-                    ? "bg-blue-600 text-white"
-                    : "hover:bg-white/10 text-gray-300"
+                    ? "bg-blue-600 text-white border-blue-500"
+                    : "hover:bg-white/10 text-gray-300  "
                 }`}
               >
                 {/* Chat Title */}

@@ -1,0 +1,1 @@
+ALTER TABLE students ADD completed_at DATETIME NULL;

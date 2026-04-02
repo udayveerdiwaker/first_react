@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { runSmartAgent } from "../agent/smartAgent";
+import { runSmartAgentStream } from "../agent/smartAgent";
 import { saveChats } from "../store/chatStore";
-import { Plus } from "lucide-react";
+import { ArrowDown, Plus } from "lucide-react";
 import ChatInput from "./ChatInput";
 import { Menu } from "lucide-react";
 import ModeSelector from "./dropdown";
@@ -9,6 +9,7 @@ import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import MarkdownRenderer from "./MarkdownRenderer";
+import "@fontsource/inter";
 
 export default function ChatBox({
   chat,
@@ -25,6 +26,11 @@ export default function ChatBox({
   const bottomRef = useRef<HTMLDivElement>(null);
   const [mode, setMode] = useState("normal");
   const containerRef = useRef<HTMLDivElement>(null);
+  const [showScrollDown, setShowScrollDown] = useState(false);
+  const typingRef = useRef({ active: true });
+  const [autoScroll, setAutoScroll] = useState(true);
+  const abortRef = useRef<AbortController | null>(null);
+
   // 🔥 Typing Animation (optimized)
   // const typeText = async (text: string) => {
   //   let current = "";
@@ -46,37 +52,51 @@ export default function ChatBox({
   // };
 
   const typeText = async (text: string) => {
-    // 👇 Check tab visibility
-    if (document.hidden) {
-      // ❌ tab hidden → no animation
-      setChat((prev: any) => {
-        const updated = [...prev];
-        updated[updated.length - 1] = {
-          role: "bot",
-          text: text,
-        };
-        return updated;
-      });
-      return;
-    }
+    typingRef.current.active = true;
 
-    let current = "";
+    let buffer = "";
 
     for (let char of text) {
-      current += char;
+      if (!typingRef.current.active) break;
 
-      setChat((prev: any) => {
-        const updated = [...prev];
-        updated[updated.length - 1] = {
-          role: "bot",
-          text: current,
-        };
-        return updated;
-      });
+      buffer += char;
 
-      await new Promise((r) => setTimeout(r, 10));
+      // update every 3 chars (smooth + copy-safe)
+      if (buffer.length % 3 === 0) {
+        const current = buffer;
+
+        setChat((prev: any) => {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            role: "bot",
+            text: current,
+            loading: false,
+          };
+          return updated;
+        });
+      }
+
+      await new Promise((r) => setTimeout(r, 20));
     }
   };
+  useEffect(() => {
+    typingRef.current.active = false;
+  }, [chatIndex]);
+  useEffect(() => {
+    if (autoScroll) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [chat]);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    // 🔥 Scroll to bottom when chat changes
+    el.scrollTo({
+      top: el.scrollHeight,
+      behavior: "auto", // instant (ChatGPT style)
+    });
+  }, [chatIndex]);
 
   // 🔥 SEND / EDIT LOGIC (CLEAN)
   const handleSend = async () => {
@@ -84,7 +104,6 @@ export default function ChatBox({
 
     let updatedChat = [...chat];
 
-    // ✏️ Edit Mode
     if (editIndex !== null) {
       updatedChat[editIndex].text = input;
       updatedChat = updatedChat.slice(0, editIndex + 1);
@@ -98,53 +117,96 @@ export default function ChatBox({
     const userInput = input;
     setInput("");
 
-    // ⏳ Typing placeholder
-    setChat([...updatedChat, { role: "bot", text: "..." }]);
+    // 🔥 Add loading message
+    setChat([...updatedChat, { role: "bot", text: "", loading: true }]);
 
     setLoading(true);
-    // const reply = await runSmartAgent(userInput);
-    const reply = await runSmartAgent(userInput, updatedChat, mode);
+
+    // let reply = await runSmartAgentStream(userInput, updatedChat, mode);
+
+    abortRef.current = new AbortController();
+
+    let reply = await runSmartAgentStream(
+      input,
+      chat,
+      (chunk: any) => {
+        setChat((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            role: "bot",
+            text: chunk,
+          };
+          return updated;
+        });
+      },
+      abortRef.current.signal
+    );
+
     setLoading(false);
 
-    // ✨ Animate response
-    // await typeText(reply);
+    if (reply.includes("error")) {
+      reply = "❌ Something went wrong. Please try again.";
+    }
 
-    const finalChat = [...updatedChat, { role: "bot", text: reply }];
-    setChat(finalChat);
+    // 🔥 animate typing
+    await typeText(reply);
 
-    // 💾 Save Chats
-    let updatedChats = [...chats];
+    // 🔥 final update (ONLY ONCE)
+    setChat((prev: any) => {
+      const updated = [...prev];
+      updated[updated.length - 1] = {
+        role: "bot",
+        text: reply,
+        loading: false,
+      };
+      return updated;
+    });
+
+    // 💾 Save
+    const updatedChats = [...chats];
 
     if (chatIndex === null) {
       updatedChats.push({
         title: userInput.slice(0, 25),
-        messages: finalChat,
+        messages: [...updatedChat, { role: "bot", text: reply }],
       });
       setChatIndex(updatedChats.length - 1);
     } else {
-      updatedChats[chatIndex].messages = finalChat;
+      updatedChats[chatIndex].messages = [
+        ...updatedChat,
+        { role: "bot", text: reply },
+      ];
     }
 
     setChats(updatedChats);
     saveChats(updatedChats);
   };
+  const handleScroll = () => {
+    const el = containerRef.current;
+    if (!el) return;
 
+    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+
+    setAutoScroll(isNearBottom);
+    setShowScrollDown(!isNearBottom);
+  };
   // 🔽 Auto Scroll
   // useEffect(() => {
   //   bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   // }, [chat]);
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+  // useEffect(() => {
+  //   const container = containerRef.current;
+  //   if (!container) return;
 
-    const isNearBottom =
-      container.scrollHeight - container.scrollTop - container.clientHeight <
-      100;
+  // const isNearBottom =
+  //   container.scrollHeight - container.scrollTop - container.clientHeight <
+  //   100;
 
-    if (isNearBottom) {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [chat]);
+  // useEffect(() => {
+  //   if (autoScroll) {
+  //     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  //   }
+  // }, [chat]);
   return (
     <div className="flex flex-col h-screen flex-1 bg-gradient-to-br from-[#0f172a] via-[#020617] to-black text-white">
       {/* 🔝 HEADER */}
@@ -180,33 +242,85 @@ export default function ChatBox({
       </div>
 
       {/* 💬 CHAT AREA */}
-      <div className="flex-1 overflow-y-auto overflow-x-visible px-3 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
-        {" "}
-        {chat.map((msg: any, i: number) => (
-          <div
-            key={i}
-            className={`flex ${
-              msg.role === "user" ? "justify-end" : "justify-start"
-            }`}
-          >
-            <div className="max-w-[85%] md:max-w-[65%]">
-              {/* Message Bubble */}
+      <div
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto bg-[#0b0f19] px-4 py-6"
+      >
+        {/* 🔥 CENTER CONTAINER (IMPORTANT) */}
+        <div className="max-w-3xl mx-auto w-full space-y-6">
+          {chat.map((msg: any, i: number) => (
+            <div
+              key={i}
+              className={`flex gap-4 ${
+                msg.role === "user" ? "justify-end" : "justify-start"
+              }`}
+            >
+              {/* 🤖 AI Avatar */}
+              {msg.role === "bot" && (
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xs font-bold">
+                  AI
+                </div>
+              )}
+
+              {/* 💬 MESSAGE */}
               <div
-                className={`px-4 py-3 rounded-2xl shadow text-sm md:text-base transition-all duration-300 ${
-                  msg.role === "user"
-                    ? "bg-blue-600 text-white"
-                    : "bg-white/10 text-gray-200 backdrop-blur"
-                }`}
+                className={`
+        max-w-[75%] px-4 py-3 rounded-2xl text-[15px] leading-relaxed
+        ${
+          msg.role === "user"
+            ? "bg-blue-600 text-white ml-auto"
+            : "bg-white/5 border border-white/10 backdrop-blur"
+        }
+      `}
               >
-                {/* <ReactMarkdown>{msg.text}</ReactMarkdown> */}
-                <MarkdownRenderer text={msg.text} />
+                {/* 🔥 BOT MESSAGE */}
+                {msg.role === "bot" ? (
+                  msg.loading ? (
+                    // ✅ Typing animation INSIDE bubble
+                    <div className="flex gap-1">
+                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
+                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></span>
+                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200"></span>
+                    </div>
+                  ) : (
+                    <MarkdownRenderer text={msg.text} />
+                  )
+                ) : (
+                  msg.text
+                )}
               </div>
             </div>
-          </div>
-        ))}
-        <div ref={bottomRef} />
-      </div>
+          ))}
+          <div ref={bottomRef} />
+        </div>
 
+        {/* 🔥 SCROLL DOWN BUTTON (ChatGPT style) */}
+        {showScrollDown && (
+          <button
+            onClick={() => {
+              containerRef.current?.scrollTo({
+                top: containerRef.current.scrollHeight,
+                behavior: "smooth",
+              });
+            }}
+            className="
+        fixed bottom-24 left-1/2 -translate-x-1/2 
+        w-10 h-10 flex items-center justify-center
+        rounded-full
+        bg-[#1f2937]/80 backdrop-blur
+        border border-white/10
+        shadow-lg shadow-black/40
+        text-white
+       hover:bg-[#1f2937]
+        
+        
+      "
+          >
+            <ArrowDown size={18} />
+          </button>
+        )}
+      </div>
       {/* ⌨️ INPUT AREA */}
       <div className="sticky bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent">
         <ChatInput
