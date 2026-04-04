@@ -32,3 +32,16 @@ body {
 .animate-fadeIn {
   animation: fadeIn 0.25s ease-out;
 }
+/* 🔥 GPT STYLE THIN SCROLLBAR */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}

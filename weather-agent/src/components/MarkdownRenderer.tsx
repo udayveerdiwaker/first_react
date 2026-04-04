@@ -1,11 +1,26 @@
+import React from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Copy } from "lucide-react";
 import { useState } from "react";
 
-export default function MarkdownRenderer({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
+const MarkdownRenderer = React.memo(({ text }: { text: string }) => {
+  // const [copied, setCopied] = useState(false);
+  // const [codeText, setCodeText] = useState("");
+  // const handleCopy = async () => {
+  //   try {
+  //     await navigator.clipboard.writeText(codeText);
+
+  //     setCopied(true);
+
+  //     setTimeout(() => {
+  //       setCopied(false);
+  //     }, 1500);
+  //   } catch {
+  //     console.log("Copy failed");
+  //   }
+  // };
   return (
     <ReactMarkdown
       components={{
@@ -13,27 +28,47 @@ export default function MarkdownRenderer({ text }: { text: string }) {
         code({ inline, className, children }: any) {
           const match = /language-(\w+)/.exec(className || "");
           const code = String(children).replace(/\n$/, "");
-
           const language = match?.[1] || "javascript";
+
+          // 🔥 separate copy state per block
+          // eslint-disable-next-line react-hooks/rules-of-hooks
+          const [copiedLocal, setCopiedLocal] = useState(false);
+
+          const handleCopyLocal = async () => {
+            try {
+              await navigator.clipboard.writeText(code);
+              setCopiedLocal(true);
+              setTimeout(() => setCopiedLocal(false), 1500);
+            } catch {
+              /* empty */
+            }
+          };
+
           if (!inline) {
             return (
-              <div className="my-5 rounded-2xl border border-white/10 bg-[#0b1220] overflow-hidden shadow-lg">
+              <div className="group my-5 rounded-2xl border border-white/10 bg-[#0b1220] overflow-hidden shadow-lg">
                 {/* 🔥 HEADER */}
                 <div className="flex items-center justify-between px-4 py-2 bg-[#0f172a] border-b border-white/10">
-                  <div className="flex items-center gap-2 text-gray-300 text-sm">
-                    <span>{"</>"}</span>
-                    <span className="font-medium capitalize">{language}</span>
+                  <div className="flex items-center gap-2 text-gray-400 text-xs">
+                    <span className="opacity-70">●</span>
+                    <span className="opacity-70">●</span>
+                    <span className="opacity-70">●</span>
+                    <span className="ml-2 uppercase tracking-wide text-[11px]">
+                      {language}
+                    </span>
                   </div>
 
+                  {/* 🔥 COPY BUTTON (GPT STYLE) */}
                   <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(code);
-                      setCopied(true);
-                      setTimeout(() => setCopied(false), 1500);
-                    }}
-                    className="text-gray-400 hover:text-white transition"
+                    onClick={handleCopyLocal}
+                    className="
+              opacity-0 group-hover:opacity-100
+              transition text-xs
+              text-gray-400 hover:text-white
+              flex items-center gap-1
+            "
                   >
-                    {copied ? "Copied!" : <Copy size={14} />}
+                    {copiedLocal ? "Copied" : <Copy size={14} />}
                   </button>
                 </div>
 
@@ -46,7 +81,7 @@ export default function MarkdownRenderer({ text }: { text: string }) {
                     margin: 0,
                     padding: "16px",
                     background: "transparent",
-                    fontSize: "14px",
+                    fontSize: "13.5px",
                     lineHeight: "1.6",
                   }}
                 >
@@ -56,13 +91,12 @@ export default function MarkdownRenderer({ text }: { text: string }) {
             );
           }
 
-          // 🔥 INLINE CODE
-          // return (
-          //   <code className="bg-white/10 px-1.5 py-0.5 rounded text-pink-400 text-sm">
-          //     {children}
-          //   </code>
-          // );
-          return <code>{children}</code>;
+          // 🔥 INLINE CODE (GPT STYLE)
+          return (
+            <code className="bg-white/10 px-1.5 py-0.5 rounded text-pink-400 text-sm">
+              {children}
+            </code>
+          );
         },
 
         // 🔥 HEADINGS (clean hierarchy)
@@ -150,4 +184,6 @@ export default function MarkdownRenderer({ text }: { text: string }) {
       {text}
     </ReactMarkdown>
   );
-}
+});
+
+export default MarkdownRenderer;

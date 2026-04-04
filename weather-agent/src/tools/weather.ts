@@ -26,39 +26,54 @@
 //     };
 //   }
 // }
-
 export async function getWeather(city: string) {
   try {
     const API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
 
     if (!API_KEY) {
-      console.error("Missing API key");
       return { error: "❌ API key missing" };
     }
 
+    // 🔥 clean city input
+    const cleanCity = city
+      .toLowerCase()
+      .replace(/[^a-z\s]/gi, "")
+      .trim();
+
+    if (!cleanCity) {
+      return { error: "❌ Invalid city name" };
+    }
+
+    // 🔥 timeout (important)
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
     const res = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
+      `https://api.openweathermap.org/data/2.5/weather?q=${cleanCity}&appid=${API_KEY}&units=metric`,
+      { signal: controller.signal }
     );
 
-    const data = await res.json();
-    console.log("Weather API:", data);
+    clearTimeout(timeout);
 
-    if (!res.ok) {
+    const data = await res.json();
+
+    if (!res.ok || !data.main) {
       return { error: data.message || "City not found" };
     }
 
     return {
       city: data.name,
-      temp: data.main.temp,
-      weather: data.weather[0].description,
+      temp: Math.round(data.main.temp),
+      weather: data.weather?.[0]?.description || "N/A",
       humidity: data.main.humidity,
       wind: data.wind.speed,
-      icon: data.weather[0].icon,
+      icon: data.weather?.[0]?.icon,
     };
-  } catch (error) {
-    console.error("Weather Error:", error);
-    return {
-      error: "❌ Unable to fetch weather. Try again.",
-    };
+  } catch (error: any) {
+    if (error.name === "AbortError") {
+      return { error: "⏱ Weather request timeout" };
+    }
+
+    return { error: "❌ Unable to fetch weather" };
   }
 }
