@@ -1,189 +1,185 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { Copy } from "lucide-react";
-import { useState } from "react";
+import { Copy, Check } from "lucide-react";
+
+const CodeBlockCopy = React.memo(
+  ({ code, language }: { code: string; language: string }) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = useCallback(async () => {
+      try {
+        await navigator.clipboard.writeText(code);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      } catch (err) {
+        console.error("Copy failed:", err);
+      }
+    }, [code]);
+
+    return (
+      <div className="group my-4 overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-950 shadow-[0_16px_45px_-30px_rgba(15,23,42,0.9)] dark:border-slate-800">
+        <div className="flex items-center justify-between border-b border-white/10 bg-slate-900 px-3 py-2">
+          <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-slate-400">
+            <span className="h-2 w-2 rounded-full bg-slate-600" />
+            <span className="h-2 w-2 rounded-full bg-slate-600" />
+            <span className="h-2 w-2 rounded-full bg-slate-600" />
+            <span className="ml-2">{language}</span>
+          </div>
+
+          <button
+            onClick={handleCopy}
+            className="flex items-center gap-1.5 rounded-lg bg-white/5 px-2 py-1 text-xs font-medium text-slate-400 transition hover:bg-white/10 hover:text-white"
+            title={copied ? "Copied!" : "Copy code"}
+          >
+            {copied ? (
+              <>
+                <Check size={14} />
+                Copied
+              </>
+            ) : (
+              <>
+                <Copy size={14} />
+                Copy
+              </>
+            )}
+          </button>
+        </div>
+
+        <SyntaxHighlighter
+          style={vscDarkPlus}
+          language={language}
+          PreTag="div"
+          customStyle={{
+            margin: 0,
+            padding: "14px 16px",
+            background: "transparent",
+            fontSize: "13px",
+            lineHeight: "1.55",
+          }}
+        >
+          {code}
+        </SyntaxHighlighter>
+      </div>
+    );
+  }
+);
+
+CodeBlockCopy.displayName = "CodeBlockCopy";
 
 const MarkdownRenderer = React.memo(({ text }: { text: string }) => {
-  // const [copied, setCopied] = useState(false);
-  // const [codeText, setCodeText] = useState("");
-  // const handleCopy = async () => {
-  //   try {
-  //     await navigator.clipboard.writeText(codeText);
-
-  //     setCopied(true);
-
-  //     setTimeout(() => {
-  //       setCopied(false);
-  //     }, 1500);
-  //   } catch {
-  //     console.log("Copy failed");
-  //   }
-  // };
   return (
-    <ReactMarkdown
-      components={{
-        // 🔥 CODE BLOCK (GPT STYLE)
-        code({ inline, className, children }: any) {
-          const match = /language-(\w+)/.exec(className || "");
-          const code = String(children).replace(/\n$/, "");
-          const language = match?.[1] || "javascript";
-
-          // 🔥 separate copy state per block
-          // eslint-disable-next-line react-hooks/rules-of-hooks
-          const [copiedLocal, setCopiedLocal] = useState(false);
-
-          const handleCopyLocal = async () => {
-            try {
-              await navigator.clipboard.writeText(code);
-              setCopiedLocal(true);
-              setTimeout(() => setCopiedLocal(false), 1500);
-            } catch {
-              /* empty */
+    <div className="markdown-output min-w-0">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          code({ inline, className, children }: any) {
+            if (inline) {
+              return (
+                <code className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[0.9em] text-fuchsia-700 dark:bg-slate-800 dark:text-fuchsia-300">
+                  {children}
+                </code>
+              );
             }
-          };
 
-          if (!inline) {
-            return (
-              <div className="group my-5 rounded-2xl border border-white/10 bg-[#0b1220] overflow-hidden shadow-lg">
-                {/* 🔥 HEADER */}
-                <div className="flex items-center justify-between px-4 py-2 bg-[#0f172a] border-b border-white/10">
-                  <div className="flex items-center gap-2 text-gray-400 text-xs">
-                    <span className="opacity-70">●</span>
-                    <span className="opacity-70">●</span>
-                    <span className="opacity-70">●</span>
-                    <span className="ml-2 uppercase tracking-wide text-[11px]">
-                      {language}
-                    </span>
-                  </div>
+            const match = /language-(\w+)/.exec(className || "");
+            const code = String(children).replace(/\n$/, "");
+            const language = match?.[1] || "text";
 
-                  {/* 🔥 COPY BUTTON (GPT STYLE) */}
-                  <button
-                    onClick={handleCopyLocal}
-                    className="
-              opacity-0 group-hover:opacity-100
-              transition text-xs
-              text-gray-400 hover:text-white
-              flex items-center gap-1
-            "
-                  >
-                    {copiedLocal ? "Copied" : <Copy size={14} />}
-                  </button>
-                </div>
+            return <CodeBlockCopy code={code} language={language} />;
+          },
 
-                {/* 🔥 CODE CONTENT */}
-                <SyntaxHighlighter
-                  style={vscDarkPlus}
-                  language={language}
-                  PreTag="div"
-                  customStyle={{
-                    margin: 0,
-                    padding: "16px",
-                    background: "transparent",
-                    fontSize: "13.5px",
-                    lineHeight: "1.6",
-                  }}
-                >
-                  {code}
-                </SyntaxHighlighter>
-              </div>
-            );
-          }
-
-          // 🔥 INLINE CODE (GPT STYLE)
-          return (
-            <code className="bg-white/10 px-1.5 py-0.5 rounded text-pink-400 text-sm">
+          h1: ({ children }) => (
+            <h1 className="mb-3 mt-5 text-lg font-semibold tracking-tight text-slate-900 dark:text-white sm:text-xl">
               {children}
-            </code>
-          );
-        },
-
-        // 🔥 HEADINGS (clean hierarchy)
-        h1: ({ children }) => (
-          <h1 className="text-xl font-semibold mt-6 mb-3 text-white tracking-tight">
-            {children}
-          </h1>
-        ),
-
-        h2: ({ children }) => (
-          <h2 className="text-lg font-semibold mt-5 mb-2 text-white tracking-tight">
-            {children}
-          </h2>
-        ),
-
-        h3: ({ children }) => (
-          <h3 className="text-base font-semibold mt-4 mb-2 text-gray-100">
-            {children}
-          </h3>
-        ),
-
-        // 🔥 PARAGRAPH (better readability)
-        p: ({ children }) => (
-          <p className="text-[15px] text-gray-300 leading-7 mb-3">{children}</p>
-        ),
-
-        // 🔥 LISTS (GPT style — simple, no icons)
-        ul: ({ children }) => (
-          <ul className="list-disc pl-5 space-y-2 text-gray-300">{children}</ul>
-        ),
-
-        ol: ({ children }) => (
-          <ol className="list-decimal pl-5 space-y-2 text-gray-300">
-            {children}
-          </ol>
-        ),
-
-        li: ({ children }) => (
-          <li className="text-[15px] leading-6">{children}</li>
-        ),
-
-        // 🔥 BLOCKQUOTE (subtle, not heavy card)
-        blockquote: ({ children }) => (
-          <blockquote className="border-l-2 border-gray-600 pl-4 italic text-gray-400 my-4">
-            {children}
-          </blockquote>
-        ),
-
-        // 🔥 STRONG TEXT
-        strong: ({ children }) => (
-          <strong className="text-white font-semibold">{children}</strong>
-        ),
-
-        // 🔥 TABLE (clean GPT style)
-        table: ({ children }) => (
-          <div className="overflow-x-auto my-4">
-            <table className="w-full text-sm border-collapse">{children}</table>
-          </div>
-        ),
-
-        th: ({ children }) => (
-          <th className="text-left px-3 py-2 text-gray-200 font-medium border-b border-white/10">
-            {children}
-          </th>
-        ),
-
-        td: ({ children }) => (
-          <td className="px-3 py-2 text-gray-300 border-b border-white/5">
-            {children}
-          </td>
-        ),
-
-        // 🔥 LINKS (GPT style subtle)
-        a: ({ href, children }) => (
-          <a
-            href={href}
-            target="_blank"
-            className="text-blue-400 hover:text-blue-300 underline underline-offset-2"
-          >
-            {children}
-          </a>
-        ),
-      }}
-    >
-      {text}
-    </ReactMarkdown>
+            </h1>
+          ),
+          h2: ({ children }) => (
+            <h2 className="mb-2 mt-4 text-base font-semibold tracking-tight text-slate-900 dark:text-white sm:text-lg">
+              {children}
+            </h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="mb-2 mt-4 text-[15px] font-semibold text-slate-800 dark:text-slate-100">
+              {children}
+            </h3>
+          ),
+          p: ({ children }) => (
+            <p className="mb-3 text-[14px] leading-6 text-slate-700 dark:text-slate-300 sm:text-[15px]">
+              {children}
+            </p>
+          ),
+          ul: ({ children }) => (
+            <ul className="mb-3 list-disc space-y-1.5 pl-5 text-[14px] text-slate-700 dark:text-slate-300 sm:text-[15px]">
+              {children}
+            </ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="mb-3 list-decimal space-y-1.5 pl-5 text-[14px] text-slate-700 dark:text-slate-300 sm:text-[15px]">
+              {children}
+            </ol>
+          ),
+          li: ({ children }) => <li className="leading-6">{children}</li>,
+          blockquote: ({ children }) => (
+            <blockquote className="my-4 rounded-r-2xl border-l-2 border-slate-300 bg-slate-50/80 py-2 pl-4 italic text-slate-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
+              {children}
+            </blockquote>
+          ),
+          strong: ({ children }) => (
+            <strong className="font-semibold text-slate-900 dark:text-white">
+              {children}
+            </strong>
+          ),
+          hr: () => (
+            <hr className="my-4 border-slate-200 dark:border-slate-700" />
+          ),
+          table: ({ children }) => (
+            <div className="my-4 overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
+              <table className="min-w-full border-collapse text-left text-[13px] sm:text-sm">
+                {children}
+              </table>
+            </div>
+          ),
+          thead: ({ children }) => (
+            <thead className="bg-slate-100/90 dark:bg-slate-800/90">
+              {children}
+            </thead>
+          ),
+          th: ({ children }) => (
+            <th className="whitespace-nowrap border-b border-slate-200 px-3 py-2 font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+              {children}
+            </th>
+          ),
+          td: ({ children }) => (
+            <td className="whitespace-pre-wrap border-b border-slate-100 px-3 py-2 align-top text-slate-600 dark:border-slate-800 dark:text-slate-300">
+              {children}
+            </td>
+          ),
+          tr: ({ children }) => (
+            <tr className="even:bg-slate-50/60 dark:even:bg-slate-800/30">
+              {children}
+            </tr>
+          ),
+          a: ({ href, children }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              className="text-blue-600 underline underline-offset-2 transition hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              {children}
+            </a>
+          ),
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    </div>
   );
 });
+
+MarkdownRenderer.displayName = "MarkdownRenderer";
 
 export default MarkdownRenderer;

@@ -10,6 +10,16 @@ body {
   font-family: "Inter", system-ui, -apple-system, sans-serif;
 }
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
 }
