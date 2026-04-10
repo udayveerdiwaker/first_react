@@ -1,31 +1,73 @@
-/* @tailwind base;
-@tailwind components;
-@tailwind utilities;
-body {
-  @apply bg-gray-100 text-gray-800;
-} */
-/* GPT style font */
-
-body {
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
-}
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+:root {
+  font-family: "Sora", "Inter", system-ui, -apple-system, sans-serif;
+  color: #0f172a;
+  background:
+    radial-gradient(circle at top left, rgba(14, 165, 233, 0.16), transparent 28%),
+    radial-gradient(circle at 80% 10%, rgba(16, 185, 129, 0.14), transparent 24%),
+    linear-gradient(180deg, #f8fbff 0%, #eef4f8 100%);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 html {
   color-scheme: light;
+  scroll-behavior: smooth;
 }
 
 html.dark {
   color-scheme: dark;
 }
 
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  font-size: 15px;
+  font-family: "Sora", "Inter", system-ui, -apple-system, sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(14, 165, 233, 0.16), transparent 28%),
+    radial-gradient(circle at 80% 10%, rgba(16, 185, 129, 0.14), transparent 24%),
+    linear-gradient(180deg, #f8fbff 0%, #eef4f8 100%);
+}
+
+html.dark body {
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.12), transparent 28%),
+    radial-gradient(circle at 80% 10%, rgba(16, 185, 129, 0.12), transparent 24%),
+    linear-gradient(180deg, #020617 0%, #0f172a 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: rgba(14, 165, 233, 0.2);
+  color: inherit;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #3b82f6;
+  background: linear-gradient(180deg, rgba(14, 165, 233, 0.9), rgba(16, 185, 129, 0.85));
   border-radius: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 @keyframes fadeIn {
@@ -33,6 +75,7 @@ html.dark {
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -42,7 +85,22 @@ html.dark {
 .animate-fadeIn {
   animation: fadeIn 0.25s ease-out;
 }
-/* 🔥 GPT STYLE THIN SCROLLBAR */
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -10px, 0);
+  }
+}
+
+.animate-float {
+  animation: float 8s ease-in-out infinite;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 5px;
 }

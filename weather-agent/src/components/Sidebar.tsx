@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import DeleteModal from "./DeleteModal";
 import {
   Trash2,
@@ -10,6 +10,7 @@ import {
   Copy,
   Search,
 } from "lucide-react";
+import { saveChats } from "../store/chatStore";
 
 export default function Sidebar({
   chats,
@@ -19,6 +20,7 @@ export default function Sidebar({
   chatIndex,
   sidebarOpen,
   setSidebarOpen,
+  interactionLocked,
 }: any) {
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
   const [menuIndex, setMenuIndex] = useState<number | null>(null);
@@ -34,7 +36,7 @@ export default function Sidebar({
     );
 
     setChats(updated);
-    localStorage.setItem("chats", JSON.stringify(updated));
+    saveChats(updated);
     setRenameIndex(null);
     setRenameText("");
     setMenuIndex(null);
@@ -71,6 +73,41 @@ export default function Sidebar({
     return title.includes(query) || preview.includes(query);
   });
 
+  const groupedChats = useMemo(() => {
+    const now = new Date();
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    ).getTime();
+    const startOfYesterday = startOfToday - 24 * 60 * 60 * 1000;
+    const startOfWeekWindow = startOfToday - 7 * 24 * 60 * 60 * 1000;
+
+    const today = filteredChats.filter(
+      ({ chat }: any) => (chat.updatedAt || 0) >= startOfToday
+    );
+    const yesterday = filteredChats.filter(
+      ({ chat }: any) =>
+        (chat.updatedAt || 0) >= startOfYesterday &&
+        (chat.updatedAt || 0) < startOfToday
+    );
+    const previous7Days = filteredChats.filter(
+      ({ chat }: any) =>
+        (chat.updatedAt || 0) >= startOfWeekWindow &&
+        (chat.updatedAt || 0) < startOfYesterday
+    );
+    const older = filteredChats.filter(
+      ({ chat }: any) => (chat.updatedAt || 0) < startOfWeekWindow
+    );
+
+    return [
+      { label: "Today", items: today },
+      { label: "Yesterday", items: yesterday },
+      { label: "Previous 7 Days", items: previous7Days },
+      { label: "Older", items: older },
+    ].filter((group) => group.items.length > 0);
+  }, [filteredChats]);
+
   return (
     <>
       {sidebarOpen && (
@@ -90,6 +127,7 @@ export default function Sidebar({
           md:static md:translate-x-0 md:shadow-none
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
         `}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="border-b border-slate-200/70 px-4 py-4 dark:border-slate-800">
           <div className="mb-4 flex items-center justify-between">
@@ -98,10 +136,10 @@ export default function Sidebar({
                 Z
               </div>
               <div>
-                <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">
+                <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">
                   ZyroChat
                 </p>
-                <h2 className="text-base font-semibold">Conversations</h2>
+                <h2 className="text-[15px] font-semibold">Conversations</h2>
               </div>
             </div>
 
@@ -117,11 +155,12 @@ export default function Sidebar({
 
           <button
             onClick={() => {
+              if (interactionLocked) return;
               setChat([]);
               setChatIndex(null);
-              setSidebarOpen(false);
             }}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+            disabled={interactionLocked}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-2.5 text-[13px] font-semibold text-white shadow-md transition hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
             aria-label="Start a new chat"
             title="Start a new chat"
           >
@@ -129,28 +168,61 @@ export default function Sidebar({
             New chat
           </button>
 
-          <div className="mt-3 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-400 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-500">
+          <div className="mt-3 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 text-[13px] text-slate-400 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-500">
             <Search size={15} />
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search recent ZyroChat sessions"
-              className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-200 dark:placeholder:text-slate-500"
+              className="w-full bg-transparent text-[13px] text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-200 dark:placeholder:text-slate-500"
             />
           </div>
+
+          {/* <div className="mt-3 rounded-3xl border border-slate-200/80 bg-white/75 p-3 shadow-[0_20px_50px_-38px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/70">
+            <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-600 dark:text-cyan-300">
+              <Sparkles size={13} />
+              Workspace Pulse
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              <div className="rounded-2xl bg-slate-100/80 px-2.5 py-2 dark:bg-slate-800/80">
+                <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                  Chats
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
+                  {workspaceStats.totalChats}
+                </p>
+              </div>
+              <div className="rounded-2xl bg-slate-100/80 px-2.5 py-2 dark:bg-slate-800/80">
+                <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                  Msgs
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
+                  {workspaceStats.totalMessages}
+                </p>
+              </div>
+              <div className="rounded-2xl bg-slate-100/80 px-2.5 py-2 dark:bg-slate-800/80">
+                <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                  Today
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
+                  {workspaceStats.todayChats}
+                </p>
+              </div>
+            </div>
+          </div> */}
         </div>
 
-        <div className="flex-1 overflow-y-auto px-3 py-3">
+        <div className="flex-1 overflow-y-auto px-2 py-3">
           {chats.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-slate-300/80 px-4 py-10 text-center dark:border-slate-700">
               <MessageSquare
                 size={24}
                 className="mx-auto mb-3 text-slate-400 dark:text-slate-500"
               />
-              <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
+              <p className="text-[13px] font-medium text-slate-600 dark:text-slate-300">
                 No ZyroChat sessions yet
               </p>
-              <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+              <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
                 Start a new chat to see it here.
               </p>
             </div>
@@ -160,174 +232,179 @@ export default function Sidebar({
                 size={24}
                 className="mx-auto mb-3 text-slate-400 dark:text-slate-500"
               />
-              <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
+              <p className="text-[13px] font-medium text-slate-600 dark:text-slate-300">
                 No matching sessions
               </p>
-              <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+              <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
                 Try a different title or message keyword.
               </p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {filteredChats.map(({ chat: c, index: originalIndex }: any) => {
-                const title = c.title || "New Chat";
-                const isActive = originalIndex === chatIndex;
-                const isRenaming = renameIndex === originalIndex;
-                const isMenuOpen = menuIndex === originalIndex;
-                const preview =
-                  c.messages?.find((m: any) => m.role === "user")?.text ||
-                  "Open this conversation";
+            <div className="space-y-4">
+              {groupedChats.map((group) => (
+                <div key={group.label}>
+                  <div className="mb-1 px-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+                      {group.label}
+                    </p>
+                  </div>
 
-                return (
-                  <div key={originalIndex} className="group relative">
-                    <div
-                      className={`cursor-pointer rounded-2xl border px-3 py-3 transition-all ${
-                        isActive
-                          ? "border-slate-900 bg-slate-900 text-white shadow-md dark:border-white dark:bg-white dark:text-slate-950"
-                          : "border-transparent bg-white/70 text-slate-700 hover:border-slate-200 hover:bg-white dark:bg-slate-900/50 dark:text-slate-300 dark:hover:border-slate-700 dark:hover:bg-slate-900/80"
-                      }`}
-                      onClick={() => {
-                        const updated = chats.map((chat: any, index: number) =>
-                          index === originalIndex
-                            ? { ...chat, updatedAt: Date.now() }
-                            : chat
-                        );
-                        setChats(updated);
-                        localStorage.setItem("chats", JSON.stringify(updated));
-                        setChat([...(updated[originalIndex]?.messages || [])]);
-                        setChatIndex(originalIndex);
-                        setSidebarOpen(false);
-                      }}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div
-                          className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-                            isActive
-                              ? "bg-white/15 text-white dark:bg-slate-200 dark:text-slate-950"
-                              : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                          }`}
-                        >
-                          <MessageSquare size={16} />
-                        </div>
+                  <div className="space-y-1">
+                    {group.items.map(
+                      ({ chat: c, index: originalIndex }: any) => {
+                        const title = c.title || "New Chat";
+                        const isActive = originalIndex === chatIndex;
+                        const isRenaming = renameIndex === originalIndex;
+                        const isMenuOpen = menuIndex === originalIndex;
 
-                        <div className="min-w-0 flex-1">
-                          {isRenaming ? (
-                            <input
-                              autoFocus
-                              type="text"
-                              value={renameText}
-                              onChange={(e) => setRenameText(e.target.value)}
-                              onClick={(e) => e.stopPropagation()}
-                              onBlur={() =>
-                                handleRenameChat(originalIndex, renameText)
-                              }
-                              onKeyDown={(e) => {
-                                e.stopPropagation();
-                                if (e.key === "Enter")
-                                  handleRenameChat(originalIndex, renameText);
-                                if (e.key === "Escape") {
-                                  setRenameIndex(null);
-                                  setRenameText("");
-                                }
+                        return (
+                          <div key={originalIndex} className="group relative">
+                            <div
+                              className={`cursor-pointer rounded-xl px-3 py-2.5 transition-all ${
+                                isActive
+                                  ? "bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-950"
+                                  : "text-slate-700 hover:bg-slate-100/90 dark:text-slate-300 dark:hover:bg-slate-900/80"
+                              }`}
+                              onClick={() => {
+                                if (interactionLocked) return;
+                                setChat([
+                                  ...(chats[originalIndex]?.messages || []),
+                                ]);
+                                setChatIndex(originalIndex);
                               }}
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:focus:border-slate-500"
-                              placeholder="Chat name"
-                              aria-label="Edit chat name"
-                            />
-                          ) : (
-                            <>
-                              <p className="truncate text-sm font-semibold">
-                                {title}
-                              </p>
-                              <p
-                                className={`mt-1 truncate text-xs ${
-                                  isActive
-                                    ? "text-white/70 dark:text-slate-600"
-                                    : "text-slate-400 dark:text-slate-500"
-                                }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <MessageSquare
+                                  size={14}
+                                  className={
+                                    isActive
+                                      ? "text-white/80 dark:text-slate-700"
+                                      : "text-slate-400 dark:text-slate-500"
+                                  }
+                                />
+                                <div className="min-w-0 flex-1">
+                                  {isRenaming ? (
+                                    <input
+                                      autoFocus
+                                      type="text"
+                                      value={renameText}
+                                      onChange={(e) =>
+                                        setRenameText(e.target.value)
+                                      }
+                                      onClick={(e) => e.stopPropagation()}
+                                      onBlur={() =>
+                                        handleRenameChat(
+                                          originalIndex,
+                                          renameText
+                                        )
+                                      }
+                                      onKeyDown={(e) => {
+                                        e.stopPropagation();
+                                        if (e.key === "Enter")
+                                          handleRenameChat(
+                                            originalIndex,
+                                            renameText
+                                          );
+                                        if (e.key === "Escape") {
+                                          setRenameIndex(null);
+                                          setRenameText("");
+                                        }
+                                      }}
+                                      className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-[12px] text-slate-900 outline-none focus:border-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:focus:border-slate-500"
+                                      placeholder="Chat name"
+                                      aria-label="Edit chat name"
+                                    />
+                                  ) : (
+                                    <p className="truncate text-[12px] font-medium">
+                                      {title}
+                                    </p>
+                                  )}
+                                </div>
+
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setMenuIndex(
+                                      menuIndex === originalIndex
+                                        ? null
+                                        : originalIndex
+                                    );
+                                  }}
+                                  className={`rounded-xl p-1.5 transition ${
+                                    isActive
+                                      ? "text-white/80 hover:bg-white/10 hover:text-white dark:text-slate-600 dark:hover:bg-slate-200 dark:hover:text-slate-950"
+                                      : "text-slate-400 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-white"
+                                  } opacity-100 md:opacity-0 md:group-hover:opacity-100`}
+                                  title="Chat options"
+                                >
+                                  <MoreVertical size={14} />
+                                </button>
+                              </div>
+                            </div>
+
+                            {isMenuOpen && (
+                              <div
+                                className="absolute left-2 right-2 top-full z-40 mt-1 overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-xl backdrop-blur dark:border-slate-700 dark:bg-slate-900/95"
+                                onMouseLeave={() => setMenuIndex(null)}
                               >
-                                {preview}
-                              </p>
-                            </>
-                          )}
-                        </div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setRenameIndex(originalIndex);
+                                    setRenameText(title);
+                                    setMenuIndex(null);
+                                  }}
+                                  className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-[13px] text-slate-700 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                >
+                                  <Edit2 size={14} />
+                                  Rename
+                                </button>
 
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setMenuIndex(
-                              menuIndex === originalIndex ? null : originalIndex
-                            );
-                          }}
-                          className={`rounded-xl p-1.5 transition ${
-                            isActive
-                              ? "text-white/80 hover:bg-white/10 hover:text-white dark:text-slate-600 dark:hover:bg-slate-200 dark:hover:text-slate-950"
-                              : "text-slate-400 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-white"
-                          } opacity-100 md:opacity-0 md:group-hover:opacity-100`}
-                          title="Chat options"
-                        >
-                          <MoreVertical size={15} />
-                        </button>
-                      </div>
-                    </div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCopyChatContent(originalIndex);
+                                  }}
+                                  className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-[13px] text-slate-700 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                >
+                                  <Copy size={14} />
+                                  Copy all
+                                </button>
 
-                    {isMenuOpen && (
-                      <div
-                        className="absolute left-3 right-3 top-full z-40 mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-xl backdrop-blur dark:border-slate-700 dark:bg-slate-900/95"
-                        onMouseLeave={() => setMenuIndex(null)}
-                      >
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setRenameIndex(originalIndex);
-                            setRenameText(title);
-                            setMenuIndex(null);
-                          }}
-                          className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-slate-700 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                        >
-                          <Edit2 size={14} />
-                          Rename
-                        </button>
+                                <hr className="border-slate-200 dark:border-slate-700" />
 
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCopyChatContent(originalIndex);
-                          }}
-                          className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-slate-700 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                        >
-                          <Copy size={14} />
-                          Copy all
-                        </button>
-
-                        <hr className="border-slate-200 dark:border-slate-700" />
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setMenuIndex(null);
-                            setDeleteIndex(originalIndex);
-                          }}
-                          className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
-                        >
-                          <Trash2 size={14} />
-                          Delete
-                        </button>
-                      </div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setMenuIndex(null);
+                                    setDeleteIndex(originalIndex);
+                                  }}
+                                  className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-[13px] text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+                                >
+                                  <Trash2 size={14} />
+                                  Delete
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
                     )}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           )}
         </div>
 
         <div className="border-t border-slate-200/70 px-4 py-3 dark:border-slate-800">
-          <div className="rounded-2xl bg-slate-100/80 px-3 py-3 text-xs text-slate-500 dark:bg-slate-900/80 dark:text-slate-400">
+          <div className="rounded-2xl bg-slate-100/80 px-3 py-3 text-[11px] text-slate-500 dark:bg-slate-900/80 dark:text-slate-400">
             <p className="font-medium text-slate-700 dark:text-slate-200">
               ZyroChat v1.0
             </p>
-            <p className="mt-1">Your recent ZyroChat sessions are stored locally.</p>
+            <p className="mt-1">
+              Your recent ZyroChat sessions are stored locally.
+            </p>
           </div>
         </div>
 
@@ -340,7 +417,7 @@ export default function Sidebar({
               );
 
               setChats(updated);
-              localStorage.setItem("chats", JSON.stringify(updated));
+              saveChats(updated);
 
               if (deleteIndex === chatIndex) {
                 setChat([]);

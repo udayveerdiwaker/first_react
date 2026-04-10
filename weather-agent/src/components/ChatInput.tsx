@@ -6,8 +6,8 @@ interface ChatInputProps {
   input: string;
   setInput: (value: string) => void;
   onSend: () => void;
-  onStop: () => void;
   loading: boolean;
+  interactionLocked?: boolean;
   centered?: boolean;
 }
 
@@ -15,12 +15,17 @@ export default function ChatInput({
   input,
   setInput,
   onSend,
-  onStop,
   loading,
+  interactionLocked = false,
   centered = false,
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [expanded, setExpanded] = useState(false);
+  // const quickPrompts = [
+  //   "What's the weather like in New York today?",
+  //   "Give me a quick summary of the latest tech news.",
+  //   "Plan my day based on today's forecast.",
+  // ];
 
   useEffect(() => {
     textareaRef.current?.focus();
@@ -64,11 +69,25 @@ export default function ChatInput({
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-base font-semibold text-white shadow-[0_18px_50px_-24px_rgba(15,23,42,0.55)] dark:bg-white dark:text-slate-950">
               Z
             </div>
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
-              Meet ZyroChat
+            <div className="mb-3 flex flex-wrap items-center justify-center gap-2 text-[11px] font-medium uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
+              <span className="rounded-full border border-slate-200 bg-white/80 px-3 py-1 dark:border-slate-700 dark:bg-slate-900/70">
+                General
+              </span>
+              <span className="rounded-full border border-slate-200 bg-white/80 px-3 py-1 dark:border-slate-700 dark:bg-slate-900/70">
+                Coding
+              </span>
+              <span className="rounded-full border border-slate-200 bg-white/80 px-3 py-1 dark:border-slate-700 dark:bg-slate-900/70">
+                Creative
+              </span>
+            </div>
+            <h2 className="text-[1.75rem] font-semibold tracking-tight text-slate-900 dark:text-white sm:text-[2.1rem]">
+              {/* Your polished AI weather desk */}
+              Something new created for ZyroChat
             </h2>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 sm:text-base">
-              Ask ZyroChat about weather, news, calculations, and more.
+            <p className="mt-2 text-[13px] text-slate-500 dark:text-slate-400 sm:text-[15px]">
+              Something new created for ZyroChat, showcasing the potential of AI
+              in transforming how we interact with information and manage our
+              daily lives.
             </p>
           </div>
         )}
@@ -93,30 +112,29 @@ export default function ChatInput({
               onChange={handleInput}
               placeholder="Message ZyroChat"
               rows={1}
+              disabled={interactionLocked}
               className={`min-h-[24px] flex-1 resize-none overflow-y-auto bg-transparent px-1 py-1 text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500 ${
                 centered
-                  ? "max-h-40 text-[15px] leading-7 sm:text-base"
-                  : "max-h-32 text-[14px] leading-6 sm:text-[15px]"
+                  ? "max-h-40 text-[14px] leading-6 sm:text-[15px]"
+                  : "max-h-32 text-[13px] leading-6 sm:text-[14px]"
               }`}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  if (loading) onStop();
-                  else if (input.trim()) onSend();
+                  if (!interactionLocked && input.trim()) onSend();
                 }
               }}
             />
 
             <button
               onClick={() => {
-                if (loading) onStop();
-                else if (input.trim()) onSend();
+                if (!interactionLocked && input.trim()) onSend();
               }}
-              disabled={!input.trim() && !loading}
+              disabled={interactionLocked || !input.trim()}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:hover:scale-100 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:disabled:bg-slate-700 dark:disabled:text-slate-500"
               title={
-                loading
-                  ? "Stop generating"
+                interactionLocked
+                  ? "Wait for the current response to finish"
                   : "Send message (Shift+Enter for new line)"
               }
             >
@@ -128,7 +146,25 @@ export default function ChatInput({
             </button>
           </div>
 
-          <div className="flex items-center justify-between border-t border-slate-200/80 px-4 py-2 text-[11px] text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          {/* {centered && (
+            <div className="flex flex-wrap gap-2 px-4 pb-3">
+              {quickPrompts.map((prompt) => (
+                <button
+                  key={prompt}
+                  type="button"
+                  onClick={() => {
+                    setInput(prompt);
+                    onQuickPrompt?.(prompt);
+                  }}
+                  className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] text-slate-600 transition hover:border-slate-300 hover:bg-white hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-white"
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+          )} */}
+
+          <div className="flex items-center justify-between border-t border-slate-200/80 px-4 py-2 text-[10px] text-slate-500 dark:border-slate-800 dark:text-slate-400">
             <span>Shift + Enter for a new line</span>
             <span>AI can make mistakes</span>
           </div>

@@ -24,9 +24,11 @@ import {
   Menu,
   Moon,
   Sun,
+  Download,
 } from "lucide-react";
 import ChatInput from "./ChatInput";
 import MarkdownRenderer from "./MarkdownRenderer";
+import ModeSelector from "./dropdown";
 
 interface Message {
   role: "user" | "bot";
@@ -51,6 +53,7 @@ interface ChatBoxProps {
   chatIndex: number | null;
   setChatIndex: (index: number | null) => void;
   setSidebarOpen: (open: boolean) => void;
+  setInteractionLocked: (locked: boolean) => void;
 }
 
 export default function ChatBox({
@@ -61,7 +64,13 @@ export default function ChatBox({
   chatIndex,
   setChatIndex,
   setSidebarOpen,
+  setInteractionLocked,
 }: ChatBoxProps) {
+  // const quickModes = [
+  //   "Give me a fast weather brief for today.",
+  //   "Compare weather, news, and my schedule in one summary.",
+  //   "Help me plan outfits and travel around today's forecast.",
+  // ];
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -74,6 +83,9 @@ export default function ChatBox({
   } | null>(null);
   const [shouldRegenerate, setShouldRegenerate] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [mode, setMode] = useState<string>(
+    () => localStorage.getItem("zyrochat-mode") || "normal"
+  );
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -85,6 +97,7 @@ export default function ChatBox({
   const responseChatIndexRef = useRef<number | null>(null);
   const viewedChatIndexRef = useRef<number | null>(null);
   const nearBottomThreshold = 120;
+  const interactionLocked = loading || pendingEdit !== null || shouldRegenerate;
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("zyrochat-theme") as
@@ -99,6 +112,15 @@ export default function ChatBox({
     setTheme(nextTheme);
     document.documentElement.classList.toggle("dark", nextTheme === "dark");
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("zyrochat-mode", mode);
+  }, [mode]);
+
+  // Lock cross-chat actions while a reply is still streaming or being regenerated.
+  useEffect(() => {
+    setInteractionLocked(interactionLocked);
+  }, [interactionLocked, setInteractionLocked]);
 
   useEffect(() => {
     if (userScrolledRef.current) {
@@ -163,6 +185,39 @@ export default function ChatBox({
   const handleCopyMessage = useCallback((text: string) => {
     navigator.clipboard.writeText(text);
   }, []);
+
+  const exportChatAsMarkdown = useCallback(() => {
+    if (!chat.length) return;
+
+    const title =
+      (chatIndex !== null && chats[chatIndex]?.title) ||
+      "ZyroChat Conversation";
+    const markdown = [
+      `# ${title}`,
+      "",
+      `- Exported: ${new Date().toLocaleString()}`,
+      `- Mode: ${mode}`,
+      "",
+      ...chat.map((message) => {
+        const speaker = message.role === "user" ? "User" : "ZyroChat";
+        return `## ${speaker}\n\n${message.text}\n`;
+      }),
+    ].join("\n");
+
+    const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    const safeFileName =
+      title
+        .replace(/[^\w\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .toLowerCase() || "zyrochat-conversation";
+
+    anchor.href = url;
+    anchor.download = `${safeFileName}.md`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }, [chat, chatIndex, chats, mode]);
 
   const touchChatSession = useCallback(
     (index: number, messages?: Message[]) => {
@@ -325,7 +380,7 @@ export default function ChatBox({
           await runSmartAgentStream(
             userInput,
             updatedChat,
-            "normal",
+            mode,
             (chunk: string) => {
               if (currentChatIndex !== viewedChatIndexRef.current) {
                 return;
@@ -403,7 +458,7 @@ export default function ChatBox({
         setLoading(false);
       }
     },
-    [setChat, setChats, stoppedByUser]
+    [mode, setChat, setChats, stoppedByUser, touchChatSession]
   );
 
   useEffect(() => {
@@ -430,7 +485,7 @@ export default function ChatBox({
   }, [shouldRegenerate, chat, loading, generateResponse, chatIndex, chats]);
 
   const handleSend = useCallback(async () => {
-    if (!input.trim() || loading) return;
+    if (!input.trim() || interactionLocked) return;
 
     const userInput = input;
     setInput("");
@@ -480,7 +535,7 @@ export default function ChatBox({
     }
   }, [
     input,
-    loading,
+    interactionLocked,
     chat,
     generateResponse,
     chatIndex,
@@ -490,12 +545,6 @@ export default function ChatBox({
     touchChatSession,
   ]);
 
-  const handleStop = useCallback(() => {
-    setStoppedByUser(true);
-    abortRef.current?.abort();
-    setLoading(false);
-  }, []);
-
   const toggleTheme = useCallback(() => {
     const nextTheme = theme === "dark" ? "light" : "dark";
     setTheme(nextTheme);
@@ -504,6 +553,9 @@ export default function ChatBox({
   }, [theme]);
 
   const isEmptyChat = chat.length === 0;
+  const totalMessages = chat.length;
+  const botMessages = chat.filter((msg) => msg.role === "bot").length;
+  const userMessages = chat.filter((msg) => msg.role === "user").length;
   const scrollToBottom = useCallback(() => {
     userScrolledRef.current = false;
     setHasNewBelow(false);
@@ -525,32 +577,113 @@ export default function ChatBox({
           <span className="text-[11px] font-medium uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">
             ZyroChat
           </span>
-          <h1 className="truncate text-base font-semibold text-slate-900 dark:text-white sm:text-lg">
-            {chatIndex !== null && chats[chatIndex]
-              ? chats[chatIndex].title
-              : "New Chat"}
-          </h1>
+          <div className="flex min-w-0 items-center gap-2">
+            <h1 className="truncate text-[15px] font-semibold text-slate-900 dark:text-white sm:text-base">
+              {chatIndex !== null && chats[chatIndex]
+                ? chats[chatIndex].title
+                : "New Chat"}
+            </h1>
+            <span className="hidden rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300 sm:inline-flex">
+              Live
+            </span>
+          </div>
         </div>
-        <button
-          onClick={toggleTheme}
-          className="rounded-xl p-2 text-slate-600 transition hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
-          title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-          aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-        >
-          {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
+        <div className="flex items-center gap-2">
+          <ModeSelector mode={mode} setMode={setMode} />
+          {!isEmptyChat && (
+            <button
+              onClick={exportChatAsMarkdown}
+              className="rounded-xl p-2 text-slate-600 transition hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+              title="Export conversation as Markdown"
+              aria-label="Export conversation as Markdown"
+            >
+              <Download size={17} />
+            </button>
+          )}
+          <button
+            onClick={toggleTheme}
+            className="rounded-xl p-2 text-slate-600 transition hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+            title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          >
+            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+        </div>
       </div>
+
+      {!isEmptyChat && (
+        <div className="border-b border-slate-200/60 bg-white/55 px-3 py-2 backdrop-blur-xl dark:border-slate-800/70 dark:bg-slate-950/35 sm:px-6">
+          <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-2">
+            <div className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/30 dark:text-emerald-300">
+              {mode} mode
+            </div>
+            <div className="rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-[11px] text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
+              {totalMessages} messages
+            </div>
+            <div className="rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-[11px] text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
+              {userMessages} prompts
+            </div>
+            <div className="rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-[11px] text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
+              {botMessages} replies
+            </div>
+            {/* {quickModes.map((mode) => (
+              <button
+                key={mode}
+                type="button"
+            onClick={() => {
+              if (interactionLocked) return;
+              setInput(mode);
+            }}
+            disabled={interactionLocked}
+            className="rounded-full border border-cyan-200/80 bg-cyan-50 px-3 py-1 text-[11px] text-cyan-700 transition hover:border-cyan-300 hover:bg-cyan-100 dark:border-cyan-900/70 dark:bg-cyan-950/30 dark:text-cyan-300 dark:hover:bg-cyan-950/50"
+          >
+            {mode}
+          </button>
+            ))} */}
+          </div>
+        </div>
+      )}
 
       {isEmptyChat ? (
         <div className="flex flex-1 items-center justify-center px-4 py-8 sm:px-6">
-          <ChatInput
-            input={input}
-            setInput={setInput}
-            onSend={handleSend}
-            onStop={handleStop}
-            loading={loading}
-            centered
-          />
+          <div className="w-full max-w-5xl">
+            {/* <div className="mb-6 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-[26px] border border-white/70 bg-white/75 p-4 shadow-[0_24px_60px_-44px_rgba(15,23,42,0.38)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/60">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-600 dark:text-cyan-300">
+                  Forecast
+                </p>
+                <p className="mt-2 text-[13px] text-slate-600 dark:text-slate-300">
+                  Real-time weather answers, quick summaries, and location-based
+                  guidance.
+                </p>
+              </div>
+              <div className="rounded-[26px] border border-white/70 bg-white/75 p-4 shadow-[0_24px_60px_-44px_rgba(15,23,42,0.38)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/60">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-300">
+                  Assist
+                </p>
+                <p className="mt-2 text-[13px] text-slate-600 dark:text-slate-300">
+                  Use it like a personal desk for planning, headlines, and fast
+                  calculations.
+                </p>
+              </div>
+              <div className="rounded-[26px] border border-white/70 bg-white/75 p-4 shadow-[0_24px_60px_-44px_rgba(15,23,42,0.38)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/60">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-fuchsia-600 dark:text-fuchsia-300">
+                  Flow
+                </p>
+                <p className="mt-2 text-[13px] text-slate-600 dark:text-slate-300">
+                  Clean conversation history, dark mode, and an input area built
+                  for longer prompts.
+                </p>
+              </div>
+            </div> */}
+            <ChatInput
+              input={input}
+              setInput={setInput}
+              onSend={handleSend}
+              loading={loading}
+              centered
+            />
+          </div>
         </div>
       ) : (
         <>
@@ -559,217 +692,217 @@ export default function ChatBox({
             onScroll={handleScroll}
             className="flex-1 overflow-y-auto scroll-smooth px-3 py-4 sm:px-5 sm:py-6"
           >
-          <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 pb-24">
-            {chat.map((msg: Message, idx: number) => {
-              const isEditing = editingIndex === idx;
+            <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 pb-24">
+              {chat.map((msg: Message, idx: number) => {
+                const isEditing = editingIndex === idx;
 
-              return (
-                <div
-                  key={idx}
-                  className={`flex w-full ${
-                    msg.role === "user" ? "justify-end" : "justify-start"
-                  }`}
-                >
+                return (
                   <div
-                    className={`group relative w-full max-w-[52rem] p-3.5 sm:p-4 ${
-                      msg.role === "user"
-                        ? "max-w-xl rounded-[22px] rounded-br-md border border-slate-300/70 bg-white/94 text-slate-900 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.4)] dark:border-slate-700/80 dark:bg-slate-800/95 dark:text-white"
-                        : "rounded-[24px] border border-slate-200/80 bg-white/88 text-slate-900 shadow-[0_14px_40px_-30px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/72 dark:text-white"
+                    key={idx}
+                    className={`flex w-full ${
+                      msg.role === "user" ? "justify-end" : "justify-start"
                     }`}
                   >
-                    <div className="mb-2.5 flex items-center gap-2 text-[11px] font-medium tracking-wide text-slate-400 dark:text-slate-500">
-                      <span
-                        className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-[11px] ${
-                          msg.role === "user"
-                            ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950"
-                            : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-                        }`}
-                      >
-                        {msg.role === "user" ? "U" : "Z"}
-                      </span>
-                      <span>{msg.role === "user" ? "You" : "ZyroChat"}</span>
-                    </div>
-
-                    {isEditing ? (
-                      <div className="space-y-3">
-                        <textarea
-                          value={editText}
-                          onChange={(e) => setEditText(e.target.value)}
-                          placeholder="Edit your message..."
-                          title="Edit message"
-                          className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-slate-500"
-                          rows={3}
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            onClick={handleSaveEdit}
-                            className="flex items-center gap-1 rounded-full bg-slate-900 px-3 py-1.5 text-sm text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
-                          >
-                            <Check size={16} /> Save
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingIndex(null);
-                              setEditText("");
-                            }}
-                            className="flex items-center gap-1 rounded-full bg-slate-200 px-3 py-1.5 text-sm text-slate-900 transition hover:bg-slate-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600"
-                          >
-                            <X size={16} /> Cancel
-                          </button>
-                        </div>
+                    <div
+                      className={`group relative w-full max-w-[52rem] p-3.5 sm:p-4 ${
+                        msg.role === "user"
+                          ? "max-w-xl rounded-[22px] rounded-br-md border border-slate-300/70 bg-white/94 text-slate-900 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.4)] dark:border-slate-700/80 dark:bg-slate-800/95 dark:text-white"
+                          : "rounded-[24px] border border-slate-200/80 bg-white/88 text-slate-900 shadow-[0_14px_40px_-30px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/72 dark:text-white"
+                      }`}
+                    >
+                      <div className="mb-2.5 flex items-center gap-2 text-[11px] font-medium tracking-wide text-slate-400 dark:text-slate-500">
+                        <span
+                          className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-[11px] ${
+                            msg.role === "user"
+                              ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950"
+                              : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                          }`}
+                        >
+                          {msg.role === "user" ? "U" : "Z"}
+                        </span>
+                        <span>{msg.role === "user" ? "You" : "ZyroChat"}</span>
                       </div>
-                    ) : (
-                      <>
-                        {msg.loading ? (
-                          <div className="flex items-center gap-3">
-                            <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500" />
-                            <span className="text-[13px] text-slate-500 dark:text-slate-400">
-                              Generating response...
-                            </span>
+
+                      {isEditing ? (
+                        <div className="space-y-3">
+                          <textarea
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                            placeholder="Edit your message..."
+                            title="Edit message"
+                            className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-slate-500"
+                            rows={3}
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleSaveEdit}
+                              className="flex items-center gap-1 rounded-full bg-slate-900 px-3 py-1.5 text-sm text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+                            >
+                              <Check size={16} /> Save
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingIndex(null);
+                                setEditText("");
+                              }}
+                              className="flex items-center gap-1 rounded-full bg-slate-200 px-3 py-1.5 text-sm text-slate-900 transition hover:bg-slate-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600"
+                            >
+                              <X size={16} /> Cancel
+                            </button>
                           </div>
-                        ) : msg.error ? (
-                          <p className="text-[13px]">{msg.text}</p>
-                        ) : (
-                          <div
-                            className={
-                              msg.role === "bot"
-                                ? "prose max-w-none dark:prose-invert"
-                                : ""
-                            }
-                          >
-                            {msg.role === "bot" ? (
-                              <MarkdownRenderer text={msg.text} />
-                            ) : (
-                                <p className="whitespace-pre-wrap text-[14px] leading-6 sm:text-[15px]">
+                        </div>
+                      ) : (
+                        <>
+                          {msg.loading ? (
+                            <div className="flex items-center gap-3">
+                              <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500" />
+                              <span className="text-[12px] text-slate-500 dark:text-slate-400">
+                                Generating response...
+                              </span>
+                            </div>
+                          ) : msg.error ? (
+                            <p className="text-[12px]">{msg.text}</p>
+                          ) : (
+                            <div
+                              className={
+                                msg.role === "bot"
+                                  ? "prose max-w-none dark:prose-invert"
+                                  : ""
+                              }
+                            >
+                              {msg.role === "bot" ? (
+                                <MarkdownRenderer text={msg.text} />
+                              ) : (
+                                <p className="whitespace-pre-wrap text-[13px] leading-6 sm:text-[14px]">
                                   {msg.text}
                                 </p>
                               )}
-                          </div>
-                        )}
-                      </>
-                    )}
-
-                    {!msg.loading && !isEditing && (
-                      <div
-                        className={`mt-3 flex items-center gap-0.5 border-t border-slate-200/80 pt-2.5 transition-opacity dark:border-slate-700/80 ${
-                          msg.role === "bot"
-                            ? "opacity-100"
-                            : "opacity-0 group-hover:opacity-100"
-                        }`}
-                      >
-                        <button
-                          onClick={() => handleCopyMessage(msg.text)}
-                          className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                          title="Copy message"
-                        >
-                          <Copy size={16} />
-                        </button>
-
-                        {msg.role === "bot" && (
-                          <>
-                            <button
-                              onClick={() => handleLikeMessage(idx)}
-                              className={`rounded-full p-2 transition ${
-                                msg.liked
-                                  ? "bg-green-100 text-green-500 dark:bg-green-900/30"
-                                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                              }`}
-                              title="Like this response"
-                            >
-                              <ThumbsUp size={16} />
-                            </button>
-
-                            <button
-                              onClick={() => handleDislikeMessage(idx)}
-                              className={`rounded-full p-2 transition ${
-                                msg.disliked
-                                  ? "bg-red-100 text-red-500 dark:bg-red-900/30"
-                                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                              }`}
-                              title="Dislike this response"
-                            >
-                              <ThumbsDown size={16} />
-                            </button>
-
-                            {idx === chat.length - 1 && (
-                              <button
-                                onClick={handleRegenerate}
-                                disabled={loading}
-                                className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                                title="Regenerate response"
-                              >
-                                <RotateCcw size={16} />
-                              </button>
-                            )}
-                          </>
-                        )}
-
-                        <button
-                          onClick={() => handleShareMessage(msg.text)}
-                          className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                          title="Share message"
-                        >
-                          <Share2 size={16} />
-                        </button>
-
-                        <div className="relative ml-auto">
-                          <button
-                            onClick={() =>
-                              setMessageMenuIndex(
-                                messageMenuIndex === idx ? null : idx
-                              )
-                            }
-                            className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                            title="More options"
-                          >
-                            <MoreVertical size={16} />
-                          </button>
-
-                          {messageMenuIndex === idx && (
-                            <div className="absolute right-0 z-50 mt-2 w-40 rounded-2xl border border-slate-200 bg-white/95 p-1 shadow-xl backdrop-blur dark:border-slate-700 dark:bg-slate-800/95">
-                              {msg.role === "user" && (
-                                <>
-                                  <button
-                                    onClick={() => {
-                                      handleEditMessage(idx);
-                                      setMessageMenuIndex(null);
-                                    }}
-                                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
-                                  >
-                                    <Edit2 size={14} />
-                                    Edit
-                                  </button>
-                                  <hr className="border-slate-200 dark:border-slate-700" />
-                                </>
-                              )}
-
-                              <button
-                                onClick={() => {
-                                  handleDeleteMessage(idx);
-                                  setMessageMenuIndex(null);
-                                }}
-                                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
-                              >
-                                <Trash2 size={14} />
-                                Delete
-                              </button>
                             </div>
                           )}
+                        </>
+                      )}
+
+                      {!msg.loading && !isEditing && (
+                        <div
+                          className={`mt-3 flex items-center gap-0.5 border-t border-slate-200/80 pt-2.5 transition-opacity dark:border-slate-700/80 ${
+                            msg.role === "bot"
+                              ? "opacity-100"
+                              : "opacity-0 group-hover:opacity-100"
+                          }`}
+                        >
+                          <button
+                            onClick={() => handleCopyMessage(msg.text)}
+                            className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                            title="Copy message"
+                          >
+                            <Copy size={16} />
+                          </button>
+
+                          {msg.role === "bot" && (
+                            <>
+                              <button
+                                onClick={() => handleLikeMessage(idx)}
+                                className={`rounded-full p-2 transition ${
+                                  msg.liked
+                                    ? "bg-green-100 text-green-500 dark:bg-green-900/30"
+                                    : "text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                }`}
+                                title="Like this response"
+                              >
+                                <ThumbsUp size={16} />
+                              </button>
+
+                              <button
+                                onClick={() => handleDislikeMessage(idx)}
+                                className={`rounded-full p-2 transition ${
+                                  msg.disliked
+                                    ? "bg-red-100 text-red-500 dark:bg-red-900/30"
+                                    : "text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                }`}
+                                title="Dislike this response"
+                              >
+                                <ThumbsDown size={16} />
+                              </button>
+
+                              {idx === chat.length - 1 && (
+                                <button
+                                  onClick={handleRegenerate}
+                                  disabled={loading}
+                                  className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                  title="Regenerate response"
+                                >
+                                  <RotateCcw size={16} />
+                                </button>
+                              )}
+                            </>
+                          )}
+
+                          <button
+                            onClick={() => handleShareMessage(msg.text)}
+                            className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                            title="Share message"
+                          >
+                            <Share2 size={16} />
+                          </button>
+
+                          <div className="relative ml-auto">
+                            <button
+                              onClick={() =>
+                                setMessageMenuIndex(
+                                  messageMenuIndex === idx ? null : idx
+                                )
+                              }
+                              className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                              title="More options"
+                            >
+                              <MoreVertical size={16} />
+                            </button>
+
+                            {messageMenuIndex === idx && (
+                              <div className="absolute right-0 z-50 mt-2 w-40 rounded-2xl border border-slate-200 bg-white/95 p-1 shadow-xl backdrop-blur dark:border-slate-700 dark:bg-slate-800/95">
+                                {msg.role === "user" && (
+                                  <>
+                                    <button
+                                      onClick={() => {
+                                        handleEditMessage(idx);
+                                        setMessageMenuIndex(null);
+                                      }}
+                                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
+                                    >
+                                      <Edit2 size={14} />
+                                      Edit
+                                    </button>
+                                    <hr className="border-slate-200 dark:border-slate-700" />
+                                  </>
+                                )}
+
+                                <button
+                                  onClick={() => {
+                                    handleDeleteMessage(idx);
+                                    setMessageMenuIndex(null);
+                                  }}
+                                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+                                >
+                                  <Trash2 size={14} />
+                                  Delete
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-            <div ref={bottomRef} />
-          </div>
+                );
+              })}
+              <div ref={bottomRef} />
+            </div>
           </div>
 
           {showScrollDown && (
             <button
               onClick={scrollToBottom}
-              className="absolute bottom-24 left-1/2 z-20 flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-[0_12px_35px_-12px_rgba(15,23,42,0.45)] transition-all hover:scale-105 hover:shadow-xl active:scale-95 dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200"
+              className="absolute bottom-28 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-[0_12px_35px_-12px_rgba(15,23,42,0.45)] transition-all hover:scale-105 hover:shadow-xl active:scale-95 dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 sm:bottom-32 sm:right-6"
               title="Scroll to bottom"
             >
               <ArrowDown size={18} />
@@ -783,8 +916,8 @@ export default function ChatBox({
             input={input}
             setInput={setInput}
             onSend={handleSend}
-            onStop={handleStop}
             loading={loading}
+            interactionLocked={interactionLocked}
           />
         </>
       )}
