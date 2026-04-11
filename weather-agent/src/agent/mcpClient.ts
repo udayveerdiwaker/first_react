@@ -1,7 +1,8 @@
 import type { AgentToolDefinition } from "./types";
 
 const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_URL?.replace(/\/$/, "") || "http://localhost:5000";
+  import.meta.env.VITE_BACKEND_URL?.replace(/\/$/, "") ||
+  "http://localhost:5000";
 
 interface ToolListResponse {
   server: string;
@@ -13,7 +14,15 @@ interface ToolExecuteResponse {
 }
 
 export async function getMcpToolDefinitions(signal?: AbortSignal) {
-  const response = await fetch(`${BACKEND_URL}/api/mcp/tools`, { signal });
+  let response: Response;
+
+  try {
+    response = await fetch(`${BACKEND_URL}/api/mcp/tools`, { signal });
+  } catch (error) {
+    throw new Error(
+      `MCP backend is not reachable at ${BACKEND_URL}. Start the backend server.`
+    );
+  }
 
   if (!response.ok) {
     throw new Error(`MCP tools request failed: ${response.status}`);
@@ -28,18 +37,28 @@ export async function executeMcpTool(
   args: Record<string, unknown>,
   signal?: AbortSignal
 ) {
-  const response = await fetch(`${BACKEND_URL}/api/mcp/execute`, {
-    method: "POST",
-    signal,
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ name, args }),
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(`${BACKEND_URL}/api/mcp/execute`, {
+      method: "POST",
+      signal,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name, args }),
+    });
+  } catch (error) {
+    throw new Error(
+      `MCP backend is not reachable at ${BACKEND_URL}. Start the backend server.`
+    );
+  }
 
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}));
-    throw new Error(payload.error || `MCP execution failed: ${response.status}`);
+    throw new Error(
+      payload.error || `MCP execution failed: ${response.status}`
+    );
   }
 
   const data = (await response.json()) as ToolExecuteResponse;

@@ -84,8 +84,7 @@ export async function getToolDefinitions(signal?: AbortSignal) {
     cachedDefinitions = await getMcpToolDefinitions(signal);
     return cachedDefinitions;
   } catch {
-    cachedDefinitions = localTools.map((tool) => tool.definition);
-    return cachedDefinitions;
+    return localTools.map((tool) => tool.definition);
   }
 }
 

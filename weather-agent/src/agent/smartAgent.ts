@@ -6,9 +6,23 @@ const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const OPENROUTER_MODEL = "openai/gpt-4o-mini";
 const MAX_CONTEXT_MESSAGES = 10;
 
+async function getOpenRouterError(response: Response, fallback: string) {
+  const payload = await response.json().catch(() => null);
+  const message =
+    payload?.error?.message ||
+    payload?.message ||
+    payload?.error ||
+    response.statusText ||
+    fallback;
+
+  return `${fallback}: ${response.status} ${message}`;
+}
+
 function getHeaders() {
   return {
     Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+    "HTTP-Referer": window.location.origin,
+    "X-OpenRouter-Title": "ZyroChat",
     "Content-Type": "application/json",
   };
 }
@@ -69,7 +83,7 @@ async function requestToolDecision(
   });
 
   if (!response.ok) {
-    throw new Error(`API error: ${response.status}`);
+    throw new Error(await getOpenRouterError(response, "API error"));
   }
 
   const data = await response.json();
@@ -103,7 +117,7 @@ async function streamModelResponse(
   });
 
   if (!response.ok) {
-    throw new Error(`Stream error: ${response.status}`);
+    throw new Error(await getOpenRouterError(response, "Stream error"));
   }
 
   if (!response.body) {
