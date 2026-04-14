@@ -1,3 +1,18 @@
+/**
+ * Returns mode-specific instructions that change how the AI behaves.
+ *
+ * The system prompt is the set of instructions given to the AI to shape its personality
+ * and response style. This function generates different versions based on the user's choice.
+ *
+ * Modes:
+ * - "coding": Act like a senior engineer, focus on correctness and production-ready code
+ * - "teaching": Be patient, explain step-by-step, assume less prior knowledge
+ * - "fun": Lighter tone with humor, but stay accurate for serious topics
+ * - "normal" (default): Balanced, adaptable tone for everyday questions
+ *
+ * @param mode - The selected mode (normal, coding, teaching, or fun)
+ * @returns A string containing the mode-specific system prompt
+ */
 function getModeInstructions(mode: string) {
   switch (mode) {
     case "coding":
@@ -40,6 +55,22 @@ Mode: Normal
   }
 }
 
+/**
+ * The main system prompt that defines ZyroChat's core behavior.
+ *
+ * This is the master instruction set given to the AI model. It tells the AI:
+ * 1. Who it is (ZyroChat, a ChatGPT-style assistant)
+ * 2. Core values (helpful, clear, conversational, honest)
+ * 3. How to reason about questions (determine intent, prioritize accuracy)
+ * 4. When and how to use tools (use them when they're the best approach)
+ * 5. How to format responses (Markdown, clear structure, practical)
+ *
+ * When a mode is selected, these base instructions are combined with mode-specific tweaks
+ * (see getModeInstructions above) to customize the behavior further.
+ *
+ * @param mode - The selected mode (normal, coding, teaching, or fun)
+ * @returns The complete system prompt string to send to the AI model
+ */
 const getSystemPrompt = (mode: string) => `
 You are ZyroChat, a ChatGPT-style assistant focused on delivering accurate, thoughtful, and well-structured replies.
 

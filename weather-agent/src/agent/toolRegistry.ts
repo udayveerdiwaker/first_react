@@ -2,6 +2,18 @@ import { getWeather } from "../tools/weather";
 import { executeMcpTool, getMcpToolDefinitions } from "./mcpClient";
 import type { AgentTool, AgentToolDefinition } from "./types";
 
+/**
+ * Returns the current date and time as a formatted string.
+ *
+ * This function:
+ * 1. Gets the current date and time from the system
+ * 2. Formats it into a readable multi-line display showing:
+ *    - The calendar date (e.g., "1/15/2024")
+ *    - The day of the week (e.g., "Monday")
+ *    - The current time (e.g., "3:45:30 PM")
+ *
+ * @returns A formatted date/time string ready to show to the user
+ */
 function getDateTime() {
   const now = new Date();
 
@@ -12,6 +24,20 @@ ${now.toLocaleDateString("en-US", { weekday: "long" })}
 ${now.toLocaleTimeString()}`;
 }
 
+/**
+ * Safely evaluates a math expression and returns the result.
+ *
+ * This function:
+ * 1. Takes a math expression like "2 + 2" or "Math.sqrt(16)"
+ * 2. Evaluates it using JavaScript's eval()
+ * 3. Returns the result or an error message if evaluation fails
+ *
+ * Warning: eval() can be unsafe, but here it's only used from trusted AI responses,
+ * not from raw user input that could contain malicious code.
+ *
+ * @param expression - A math expression to calculate
+ * @returns A string with the result or error message
+ */
 function calculate(expression: string) {
   try {
     return `Result: ${eval(expression)}`;
@@ -20,6 +46,19 @@ function calculate(expression: string) {
   }
 }
 
+/**
+ * Array of tools that run locally in the frontend (no backend needed).
+ *
+ * These tools are always available and don't require calling the backend.
+ * Each tool in the array contains:
+ * - definition: What the AI model sees (name, description, expected parameters)
+ * - run: The actual function that executes when the AI calls this tool
+ *
+ * Tools included:
+ * 1. getWeather: Fetches current weather for a city
+ * 2. getDateTime: Returns current date and time
+ * 3. calculate: Evaluates math expressions
+ */
 const localTools: AgentTool[] = [
   {
     definition: {
@@ -34,12 +73,15 @@ const localTools: AgentTool[] = [
         },
       },
     },
+    // When the AI wants weather info, run this function
     async run(args) {
       const city = String(args.city || "Delhi");
       const result = await getWeather(city);
+      // If the API call failed, return the error message
       if ("error" in result) {
         return result.error;
       }
+      // Return a formatted weather string for the AI to include in its response
       return `${result.city} ${result.temp}°C ${result.weather}`;
     },
   },
@@ -52,6 +94,7 @@ const localTools: AgentTool[] = [
         parameters: { type: "object", properties: {} },
       },
     },
+    // When the AI wants to know the current time, run this function
     async run() {
       return getDateTime();
     },
@@ -69,37 +112,86 @@ const localTools: AgentTool[] = [
         },
       },
     },
+    // When the AI needs to calculate something, run this function
     async run(args) {
       return calculate(String(args.expression || ""));
     },
   },
 ];
 
+/**
+ * Cache for tool definitions fetched from the backend.
+ *
+ * The first time we fetch backend tools, we store them here so we don't have to
+ * ask the backend every single message. This improves performance.
+ */
 let cachedDefinitions: AgentToolDefinition[] | null = null;
 
+/**
+ * Fetches all available tool definitions from the backend (plus local tools).
+ *
+ * This function:
+ * 1. Checks if we've already fetched the backend tools (cached)
+ * 2. If yes, return the cached list for performance
+ * 3. If no, fetch from the backend via getMcpToolDefinitions()
+ * 4. If the backend is unreachable, fall back to local tools only
+ *
+ * The returned definitions are what the AI model sees as "available tools".
+ * The AI uses these descriptions to decide whether to call a tool.
+ *
+ * @param signal - Can be used to cancel the fetch if needed
+ * @returns Promise resolving to available tool definitions
+ */
 export async function getToolDefinitions(signal?: AbortSignal) {
+  // If we've already loaded the definitions, just return the cached version
   if (cachedDefinitions) return cachedDefinitions;
 
   try {
+    // Try to get tool definitions from the backend
     cachedDefinitions = await getMcpToolDefinitions(signal);
     return cachedDefinitions;
   } catch {
+    // If backend is unavailable, fall back to local tools only
     return localTools.map((tool) => tool.definition);
   }
 }
 
+/**
+ * Runs a tool by name with the given arguments.
+ *
+ * This function:
+ * 1. Checks if the tool exists locally (faster execution)
+ * 2. If found locally, runs it and returns the result
+ * 3. If not found, tries to run it on the backend
+ * 4. This acts as a router that decides whether to use local or backend tools
+ *
+ * Example:
+ * - runToolByName("calculate", { expression: "2 + 2" }, signal)
+ *   → Returns "Result: 4"
+ * - runToolByName("getNews", {}, signal)
+ *   → Sends to backend, which fetches news headlines
+ *
+ * @param name - The name of the tool to run
+ * @param args - Input parameters for the tool (varies by tool)
+ * @param signal - Can be used to cancel execution
+ * @returns Promise resolving to the tool's result as a string
+ * @throws Error if the tool doesn't exist or fails
+ */
 export async function runToolByName(
   name: string,
   args: Record<string, unknown>,
   signal: AbortSignal
 ) {
+  // Look for the tool in our local tools first
   const localTool = localTools.find(
     (entry) => entry.definition.function.name === name
   );
 
+  // If found locally, run it immediately (no backend call needed)
   if (localTool) {
     return localTool.run(args, { signal });
   }
 
+  // If not found locally, try to run it on the backend
   return executeMcpTool(name, args, signal);
 }

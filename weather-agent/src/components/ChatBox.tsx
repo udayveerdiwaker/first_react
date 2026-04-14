@@ -56,6 +56,9 @@ interface ChatBoxProps {
   setInteractionLocked: (locked: boolean) => void;
 }
 
+// Main chat window component.
+// It displays messages, sends user prompts to the AI agent, streams bot replies,
+// manages editing/regeneration, and keeps saved chat history in sync.
 export default function ChatBox({
   chat,
   setChat,
@@ -100,6 +103,8 @@ export default function ChatBox({
   const interactionLocked = loading || pendingEdit !== null || shouldRegenerate;
 
   useEffect(() => {
+    // Loads the saved theme when the chat window first appears.
+    // If no theme is saved, it follows the user's system dark-mode preference.
     const savedTheme = localStorage.getItem("zyrochat-theme") as
       | "light"
       | "dark"
@@ -114,6 +119,7 @@ export default function ChatBox({
   }, []);
 
   useEffect(() => {
+    // Saves the selected assistant mode so it stays the same after refresh.
     localStorage.setItem("zyrochat-mode", mode);
   }, [mode]);
 
@@ -123,6 +129,8 @@ export default function ChatBox({
   }, [interactionLocked, setInteractionLocked]);
 
   useEffect(() => {
+    // Auto-scrolls to the latest message unless the user has manually scrolled up.
+    // If the user is reading older messages, it shows the scroll-down button instead.
     if (userScrolledRef.current) {
       setHasNewBelow(true);
       setShowScrollDown(true);
@@ -130,12 +138,15 @@ export default function ChatBox({
     }
 
     const timer = setTimeout(() => {
+      // Gives React a moment to render the new message before scrolling to it.
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 100);
 
     return () => clearTimeout(timer);
   }, [chat.length]);
 
+  // Tracks whether the user is near the bottom of the chat.
+  // This decides whether new messages should auto-scroll or show a "new below" indicator.
   const handleScroll = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -153,6 +164,9 @@ export default function ChatBox({
   }, []);
 
   useEffect(() => {
+    // Runs when the user switches to a different saved chat.
+    // It resets temporary UI state so menus, edits, and loading flags do not leak
+    // from the previous conversation.
     viewedChatIndexRef.current = chatIndex;
 
     userScrolledRef.current = false;
@@ -182,10 +196,14 @@ export default function ChatBox({
     }
   }, [chatIndex]);
 
+  // Copies one message to the clipboard.
+  // It is used by the message action bar under each chat bubble.
   const handleCopyMessage = useCallback((text: string) => {
     navigator.clipboard.writeText(text);
   }, []);
 
+  // Downloads the current conversation as a Markdown file.
+  // The export includes the chat title, time, mode, and every message.
   const exportChatAsMarkdown = useCallback(() => {
     if (!chat.length) return;
 
@@ -199,6 +217,7 @@ export default function ChatBox({
       `- Mode: ${mode}`,
       "",
       ...chat.map((message) => {
+        // Converts each saved message into a readable Markdown section.
         const speaker = message.role === "user" ? "User" : "ZyroChat";
         return `## ${speaker}\n\n${message.text}\n`;
       }),
@@ -219,9 +238,13 @@ export default function ChatBox({
     URL.revokeObjectURL(url);
   }, [chat, chatIndex, chats, mode]);
 
+  // Updates one saved chat's timestamp and, optionally, its messages.
+  // This keeps the sidebar order and local storage aligned with the latest reply.
   const touchChatSession = useCallback(
     (index: number, messages?: Message[]) => {
       setChats((prevChats: ChatSession[]) => {
+        // React state is treated as immutable, so this creates a new array
+        // instead of changing the old saved chat list directly.
         if (!prevChats[index]) return prevChats;
 
         const updated = prevChats.map((chat, chatIdx) =>
@@ -241,6 +264,8 @@ export default function ChatBox({
     [setChats]
   );
 
+  // Toggles the "liked" state for a bot message.
+  // Liking a message also clears "disliked" so both states cannot be active.
   const handleLikeMessage = useCallback(
     (index: number) => {
       const updatedChat = chat.map((msg: Message, i: number) =>
@@ -260,6 +285,8 @@ export default function ChatBox({
     [chat, chatIndex, chats, setChat, setChats]
   );
 
+  // Toggles the "disliked" state for a bot message.
+  // Disliking a message also clears "liked" for the same reason.
   const handleDislikeMessage = useCallback(
     (index: number) => {
       const updatedChat = chat.map((msg: Message, i: number) =>
@@ -279,6 +306,8 @@ export default function ChatBox({
     [chat, chatIndex, chats, setChat, setChats]
   );
 
+  // Shares a message through the browser share sheet when available.
+  // If sharing is unavailable, it falls back to copying the text.
   const handleShareMessage = useCallback((text: string) => {
     if (navigator.share) {
       navigator.share({
@@ -290,6 +319,8 @@ export default function ChatBox({
     }
   }, []);
 
+  // Deletes one message from the current conversation.
+  // It also updates the saved chat entry so refresh does not bring the message back.
   const handleDeleteMessage = useCallback(
     (index: number) => {
       const newChat = chat.filter((_: Message, i: number) => i !== index);
@@ -308,6 +339,8 @@ export default function ChatBox({
     [chat, chatIndex, chats, setChat, setChats]
   );
 
+  // Starts editing a user message.
+  // Only user messages can be edited because bot messages are generated output.
   const handleEditMessage = useCallback(
     (index: number) => {
       if (chat[index]?.role === "user") {
@@ -318,6 +351,8 @@ export default function ChatBox({
     [chat]
   );
 
+  // Saves an edited user message.
+  // The chat is trimmed back to that edited message, then a new AI response is generated.
   const handleSaveEdit = useCallback(async () => {
     if (editingIndex === null || !editText.trim()) return;
 
@@ -330,6 +365,8 @@ export default function ChatBox({
     setEditText("");
   }, [editingIndex, editText, chat, setChat]);
 
+  // Regenerates the latest assistant reply.
+  // It finds the last user message, removes everything after it, and asks again.
   const handleRegenerate = useCallback(async () => {
     if (chat.length === 0) return;
 
@@ -349,6 +386,8 @@ export default function ChatBox({
     setShouldRegenerate(true);
   }, [chat, setChat]);
 
+  // Sends a user message to the smart agent and streams the assistant response.
+  // It handles loading state, aborts, errors, scroll indicators, and saving history.
   const generateResponse = useCallback(
     async (
       userInput: string,
@@ -382,6 +421,8 @@ export default function ChatBox({
             updatedChat,
             mode,
             (chunk: string) => {
+              // Runs every time the model streams more text.
+              // The UI is updated with the growing reply so the answer appears live.
               if (currentChatIndex !== viewedChatIndexRef.current) {
                 return;
               }
@@ -462,6 +503,8 @@ export default function ChatBox({
   );
 
   useEffect(() => {
+    // After a user edits a message, this effect waits until the UI is ready,
+    // then generates a fresh response for the edited text.
     if (pendingEdit && !loading) {
       generateResponse(pendingEdit.text, chat, chatIndex, chats);
       setPendingEdit(null);
@@ -469,8 +512,11 @@ export default function ChatBox({
   }, [pendingEdit, chat, loading, generateResponse, chatIndex, chats]);
 
   useEffect(() => {
+    // After the user clicks regenerate, this effect finds the most recent
+    // user prompt and asks the AI to answer it again.
     if (shouldRegenerate && !loading && chat.length > 0) {
       const lastUserIndex = (() => {
+        // Searches backward because the latest user message is usually near the end.
         for (let i = chat.length - 1; i >= 0; i--) {
           if (chat[i].role === "user") return i;
         }
@@ -484,6 +530,8 @@ export default function ChatBox({
     }
   }, [shouldRegenerate, chat, loading, generateResponse, chatIndex, chats]);
 
+  // Sends the current text from the input box.
+  // It creates a new saved chat when needed, clears the input, and starts streaming.
   const handleSend = useCallback(async () => {
     if (!input.trim() || interactionLocked) return;
 
@@ -507,6 +555,7 @@ export default function ChatBox({
 
       generateChatTitle(userInput)
         .then((title) => {
+          // When title generation finishes, update only the new chat title.
           setChats((prevChats: ChatSession[]) => {
             const updated = prevChats.map((c: ChatSession, idx: number) =>
               idx === newIndex ? { ...c, title, updatedAt: Date.now() } : c
@@ -545,6 +594,8 @@ export default function ChatBox({
     touchChatSession,
   ]);
 
+  // Switches between light and dark themes.
+  // It saves the choice in local storage and toggles the html "dark" class.
   const toggleTheme = useCallback(() => {
     const nextTheme = theme === "dark" ? "light" : "dark";
     setTheme(nextTheme);
@@ -556,6 +607,8 @@ export default function ChatBox({
   const totalMessages = chat.length;
   const botMessages = chat.filter((msg) => msg.role === "bot").length;
   const userMessages = chat.filter((msg) => msg.role === "user").length;
+  // Scrolls the chat back to the newest message.
+  // It also clears the "new messages below" indicator.
   const scrollToBottom = useCallback(() => {
     userScrolledRef.current = false;
     setHasNewBelow(false);
@@ -694,6 +747,8 @@ export default function ChatBox({
           >
             <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 pb-24">
               {chat.map((msg: Message, idx: number) => {
+                // Prepares display flags for each message row.
+                // The index is used for editing, deleting, and action buttons.
                 const isEditing = editingIndex === idx;
 
                 return (
@@ -742,6 +797,7 @@ export default function ChatBox({
                             </button>
                             <button
                               onClick={() => {
+                                // Leaves edit mode and discards the temporary edit text.
                                 setEditingIndex(null);
                                 setEditText("");
                               }}
@@ -847,11 +903,12 @@ export default function ChatBox({
 
                           <div className="relative ml-auto">
                             <button
-                              onClick={() =>
+                              onClick={() => {
+                                // Toggles the small menu for this specific message.
                                 setMessageMenuIndex(
                                   messageMenuIndex === idx ? null : idx
-                                )
-                              }
+                                );
+                              }}
                               className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                               title="More options"
                             >
@@ -864,6 +921,7 @@ export default function ChatBox({
                                   <>
                                     <button
                                       onClick={() => {
+                                        // Starts editing this user message and closes the menu.
                                         handleEditMessage(idx);
                                         setMessageMenuIndex(null);
                                       }}
@@ -878,6 +936,7 @@ export default function ChatBox({
 
                                 <button
                                   onClick={() => {
+                                    // Deletes this message and closes the menu afterward.
                                     handleDeleteMessage(idx);
                                     setMessageMenuIndex(null);
                                   }}

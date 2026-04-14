@@ -5,10 +5,14 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Copy, Check } from "lucide-react";
 
+// Renders a single fenced code block with a copy button.
+// React.memo prevents this block from re-rendering unless its code or language changes.
 const CodeBlockCopy = React.memo(
   ({ code, language }: { code: string; language: string }) => {
     const [copied, setCopied] = useState(false);
 
+    // Copies the code text to the user's clipboard.
+    // After a successful copy, it briefly changes the button label to "Copied".
     const handleCopy = useCallback(async () => {
       try {
         await navigator.clipboard.writeText(code);
@@ -69,12 +73,18 @@ const CodeBlockCopy = React.memo(
 
 CodeBlockCopy.displayName = "CodeBlockCopy";
 
+// Converts assistant markdown text into styled React elements.
+// It supports GitHub-style markdown, syntax-highlighted code blocks, tables,
+// links, lists, headings, and other common response formatting.
 const MarkdownRenderer = React.memo(({ text }: { text: string }) => {
   return (
     <div className="markdown-output min-w-0">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
+          // Handles both inline code and fenced code blocks.
+          // Inline code gets a small pill style, while larger code blocks
+          // use the copyable CodeBlockCopy component above.
           code({ inline, className, children }: any) {
             if (inline) {
               return (
@@ -91,50 +101,61 @@ const MarkdownRenderer = React.memo(({ text }: { text: string }) => {
             return <CodeBlockCopy code={code} language={language} />;
           },
 
+          // Renders level-one headings from markdown.
           h1: ({ children }) => (
             <h1 className="mb-3 mt-5 text-lg font-semibold tracking-tight text-slate-900 dark:text-white sm:text-xl">
               {children}
             </h1>
           ),
+          // Renders level-two headings from markdown.
           h2: ({ children }) => (
             <h2 className="mb-2 mt-4 text-base font-semibold tracking-tight text-slate-900 dark:text-white sm:text-lg">
               {children}
             </h2>
           ),
+          // Renders level-three headings from markdown.
           h3: ({ children }) => (
             <h3 className="mb-2 mt-4 text-[15px] font-semibold text-slate-800 dark:text-slate-100">
               {children}
             </h3>
           ),
+          // Renders normal paragraphs from markdown.
           p: ({ children }) => (
             <p className="mb-3 text-[14px] leading-6 text-slate-700 dark:text-slate-300 sm:text-[15px]">
               {children}
             </p>
           ),
+          // Renders unordered bullet lists from markdown.
           ul: ({ children }) => (
             <ul className="mb-3 list-disc space-y-1.5 pl-5 text-[14px] text-slate-700 dark:text-slate-300 sm:text-[15px]">
               {children}
             </ul>
           ),
+          // Renders numbered lists from markdown.
           ol: ({ children }) => (
             <ol className="mb-3 list-decimal space-y-1.5 pl-5 text-[14px] text-slate-700 dark:text-slate-300 sm:text-[15px]">
               {children}
             </ol>
           ),
+          // Renders each list item with consistent line height.
           li: ({ children }) => <li className="leading-6">{children}</li>,
+          // Renders quoted markdown text with a left border.
           blockquote: ({ children }) => (
             <blockquote className="my-4 rounded-r-2xl border-l-2 border-slate-300 bg-slate-50/80 py-2 pl-4 italic text-slate-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
               {children}
             </blockquote>
           ),
+          // Renders bold markdown text.
           strong: ({ children }) => (
             <strong className="font-semibold text-slate-900 dark:text-white">
               {children}
             </strong>
           ),
+          // Renders horizontal divider lines.
           hr: () => (
             <hr className="my-4 border-slate-200 dark:border-slate-700" />
           ),
+          // Wraps markdown tables so wide tables can scroll on small screens.
           table: ({ children }) => (
             <div className="my-4 overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
               <table className="min-w-full border-collapse text-left text-[13px] sm:text-sm">
@@ -142,26 +163,31 @@ const MarkdownRenderer = React.memo(({ text }: { text: string }) => {
               </table>
             </div>
           ),
+          // Renders the table header area.
           thead: ({ children }) => (
             <thead className="bg-slate-100/90 dark:bg-slate-800/90">
               {children}
             </thead>
           ),
+          // Renders table header cells.
           th: ({ children }) => (
             <th className="whitespace-nowrap border-b border-slate-200 px-3 py-2 font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
               {children}
             </th>
           ),
+          // Renders table body cells.
           td: ({ children }) => (
             <td className="whitespace-pre-wrap border-b border-slate-100 px-3 py-2 align-top text-slate-600 dark:border-slate-800 dark:text-slate-300">
               {children}
             </td>
           ),
+          // Renders table rows with alternating background colors.
           tr: ({ children }) => (
             <tr className="even:bg-slate-50/60 dark:even:bg-slate-800/30">
               {children}
             </tr>
           ),
+          // Renders markdown links in a new browser tab.
           a: ({ href, children }) => (
             <a
               href={href}

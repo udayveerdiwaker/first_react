@@ -12,6 +12,9 @@ import {
 } from "lucide-react";
 import { saveChats } from "../store/chatStore";
 
+// Sidebar component.
+// It shows saved chats, lets the user search and rename them,
+// and provides actions like starting, copying, or deleting a conversation.
 export default function Sidebar({
   chats,
   setChats,
@@ -28,6 +31,8 @@ export default function Sidebar({
   const [renameText, setRenameText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Renames a chat and saves the updated chat list to local storage.
+  // Empty names are ignored so the sidebar does not show blank chat titles.
   const handleRenameChat = (index: number, newTitle: string) => {
     if (!newTitle.trim()) return;
 
@@ -42,6 +47,8 @@ export default function Sidebar({
     setMenuIndex(null);
   };
 
+  // Copies every message in one chat as plain text.
+  // User messages are labeled "You" and assistant messages are labeled "AI".
   const handleCopyChatContent = (index: number) => {
     const chat = chats[index];
     if (!chat || !chat.messages) return;
@@ -55,11 +62,17 @@ export default function Sidebar({
   };
 
   const sortedChats = chats
+    // Adds the original array index so sorting does not lose where each chat lives
+    // in the real saved chat list.
     .map((chat: any, index: number) => ({ chat, index }))
     .sort(
+      // Newer conversations should appear first in the sidebar.
       (a: any, b: any) => (b.chat.updatedAt || 0) - (a.chat.updatedAt || 0)
     );
 
+  // Filters chats by the search box.
+  // It checks both the chat title and all message text, so users can search
+  // by topic even if the title does not contain the word.
   const filteredChats = sortedChats.filter(({ chat }: any) => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return true;
@@ -73,6 +86,8 @@ export default function Sidebar({
     return title.includes(query) || preview.includes(query);
   });
 
+  // Groups chats into date sections for a ChatGPT-like history list.
+  // useMemo keeps this calculation from running again unless the filtered list changes.
   const groupedChats = useMemo(() => {
     const now = new Date();
     const startOfToday = new Date(
@@ -111,12 +126,14 @@ export default function Sidebar({
   return (
     <>
       {sidebarOpen && (
+        // On small screens, clicking the dark overlay closes the sidebar.
         <div
           className="fixed inset-0 z-40 bg-slate-950/50 backdrop-blur-[2px] md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
+      {/* Prevents clicks inside the sidebar from bubbling to the mobile overlay. */}
       <div
         className={`
           fixed left-0 top-0 z-50 flex h-full w-[288px] flex-col
@@ -155,6 +172,7 @@ export default function Sidebar({
 
           <button
             onClick={() => {
+              // Starts a fresh chat only when no response is currently streaming.
               if (interactionLocked) return;
               setChat([]);
               setChatIndex(null);
@@ -170,6 +188,8 @@ export default function Sidebar({
 
           <div className="mt-3 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 text-[13px] text-slate-400 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-500">
             <Search size={15} />
+            {/* Keeps the search box controlled by React state.
+            Every typed character immediately filters the visible chat list. */}
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -242,6 +262,7 @@ export default function Sidebar({
           ) : (
             <div className="space-y-4">
               {groupedChats.map((group) => (
+                // Renders one date group such as Today, Yesterday, or Older.
                 <div key={group.label}>
                   <div className="mb-1 px-2">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
@@ -252,6 +273,8 @@ export default function Sidebar({
                   <div className="space-y-1">
                     {group.items.map(
                       ({ chat: c, index: originalIndex }: any) => {
+                        // Builds the display state for one chat row.
+                        // originalIndex points back to the real chat in the saved array.
                         const title = c.title || "New Chat";
                         const isActive = originalIndex === chatIndex;
                         const isRenaming = renameIndex === originalIndex;
@@ -266,6 +289,8 @@ export default function Sidebar({
                                   : "text-slate-700 hover:bg-slate-100/90 dark:text-slate-300 dark:hover:bg-slate-900/80"
                               }`}
                               onClick={() => {
+                                // Opens this conversation unless another action is locked.
+                                // The messages are copied into active chat state for display.
                                 if (interactionLocked) return;
                                 setChat([
                                   ...(chats[originalIndex]?.messages || []),
@@ -288,17 +313,21 @@ export default function Sidebar({
                                       autoFocus
                                       type="text"
                                       value={renameText}
-                                      onChange={(e) =>
-                                        setRenameText(e.target.value)
-                                      }
+                                      onChange={(e) => {
+                                        // Updates the temporary rename text while typing.
+                                        setRenameText(e.target.value);
+                                      }}
                                       onClick={(e) => e.stopPropagation()}
-                                      onBlur={() =>
+                                      onBlur={() => {
+                                        // Saves the rename when the input loses focus.
                                         handleRenameChat(
                                           originalIndex,
                                           renameText
-                                        )
-                                      }
+                                        );
+                                      }}
                                       onKeyDown={(e) => {
+                                        // Enter saves the new title.
+                                        // Escape cancels rename mode without saving.
                                         e.stopPropagation();
                                         if (e.key === "Enter")
                                           handleRenameChat(
@@ -323,6 +352,7 @@ export default function Sidebar({
 
                                 <button
                                   onClick={(e) => {
+                                    // Opens or closes the action menu for this one chat.
                                     e.stopPropagation();
                                     setMenuIndex(
                                       menuIndex === originalIndex
@@ -349,6 +379,8 @@ export default function Sidebar({
                               >
                                 <button
                                   onClick={(e) => {
+                                    // Switches this row into rename mode and pre-fills
+                                    // the input with the current title.
                                     e.stopPropagation();
                                     setRenameIndex(originalIndex);
                                     setRenameText(title);
@@ -362,6 +394,7 @@ export default function Sidebar({
 
                                 <button
                                   onClick={(e) => {
+                                    // Copies the full conversation text to the clipboard.
                                     e.stopPropagation();
                                     handleCopyChatContent(originalIndex);
                                   }}
@@ -375,6 +408,8 @@ export default function Sidebar({
 
                                 <button
                                   onClick={(e) => {
+                                    // Opens the confirmation modal before permanently
+                                    // removing this chat from local history.
                                     e.stopPropagation();
                                     setMenuIndex(null);
                                     setDeleteIndex(originalIndex);
@@ -412,6 +447,8 @@ export default function Sidebar({
           <DeleteModal
             onClose={() => setDeleteIndex(null)}
             onConfirm={() => {
+              // Removes the selected chat, saves the shorter list,
+              // and clears the main chat window if the active chat was deleted.
               const updated = chats.filter(
                 (_: any, i: number) => i !== deleteIndex
               );

@@ -1,6 +1,38 @@
-import { ArrowUp, Square } from "lucide-react";
+import { ArrowUp, Mic, MicOff, Square } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
 import React from "react";
+
+type SpeechRecognitionConstructor = new () => SpeechRecognition;
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+  onstart: (() => void) | null;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onend: (() => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+}
+
+interface SpeechRecognitionEvent {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent {
+  error: string;
+  message?: string;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  }
+}
 
 interface ChatInputProps {
   input: string;
@@ -11,6 +43,9 @@ interface ChatInputProps {
   centered?: boolean;
 }
 
+// Chat input component.
+// It lets the user type a message, send it, and use browser speech recognition
+// to turn microphone input into text when the browser supports it.
 export default function ChatInput({
   input,
   setInput,
@@ -20,7 +55,13 @@ export default function ChatInput({
   centered = false,
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const speechBaseRef = useRef("");
+  const finalTranscriptRef = useRef("");
   const [expanded, setExpanded] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(true);
+  const [speechStatus, setSpeechStatus] = useState("");
   // const quickPrompts = [
   //   "What's the weather like in New York today?",
   //   "Give me a quick summary of the latest tech news.",
@@ -28,12 +69,32 @@ export default function ChatInput({
   // ];
 
   useEffect(() => {
+    // Keeps the typing box focused whenever the input value changes.
+    // This makes it easy to keep typing after actions like sending or speech input.
     textareaRef.current?.focus();
   }, [input]);
 
+  useEffect(() => {
+    // Checks whether the current browser has the Web Speech API.
+    // Chrome and Edge usually support it; unsupported browsers disable the mic.
+    const SpeechRecognitionApi =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    setSpeechSupported(Boolean(SpeechRecognitionApi));
+
+    return () => {
+      // Stops speech recognition if the component is removed from the screen.
+      // This prevents the microphone session from continuing in the background.
+      recognitionRef.current?.abort();
+    };
+  }, []);
+
+  // Handles normal typing in the textarea.
+  // It updates the parent input state and grows the textarea height as text wraps.
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setInput(newValue);
+    setSpeechStatus("");
 
     const el = textareaRef.current;
     if (!el) return;
@@ -53,6 +114,117 @@ export default function ChatInput({
 
     el.style.height =
       el.scrollHeight <= maxHeight ? `${el.scrollHeight}px` : `${maxHeight}px`;
+  };
+
+  // Recalculates the textarea height after text is changed outside normal typing.
+  // Speech input uses this because the text is inserted programmatically.
+  const syncTextareaHeight = () => {
+    requestAnimationFrame(() => {
+      // Waits until React has placed the new text in the textarea,
+      // then measures the real scroll height and applies the matching height.
+      const el = textareaRef.current;
+      if (!el) return;
+
+      const maxHeight = centered ? 160 : 128;
+      el.style.height = "auto";
+      el.style.height =
+        el.scrollHeight <= maxHeight ? `${el.scrollHeight}px` : `${maxHeight}px`;
+      setExpanded(Boolean(el.value.trim()) && el.scrollHeight > 88);
+    });
+  };
+
+  // Starts or stops microphone-to-text input.
+  // When listening starts, it creates a browser speech recognizer and appends
+  // recognized words to the existing message text.
+  const toggleSpeechInput = () => {
+    if (!speechSupported || interactionLocked) return;
+
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      setSpeechStatus("Voice input stopped");
+      return;
+    }
+
+    const SpeechRecognitionApi =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognitionApi) {
+      setSpeechSupported(false);
+      setSpeechStatus("Voice input is not supported in this browser");
+      return;
+    }
+
+    const recognition = new SpeechRecognitionApi();
+    speechBaseRef.current = input.trim();
+    finalTranscriptRef.current = "";
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => {
+      // The browser has successfully started listening to the microphone.
+      setListening(true);
+      setSpeechStatus("Listening...");
+    };
+
+    recognition.onresult = (event) => {
+      // Speech recognition sends both final words and temporary guesses.
+      // Final words are stored, while interim words are shown live as the user speaks.
+      let interimTranscript = "";
+
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        const result = event.results[i];
+        const transcript = result[0].transcript;
+
+        if (result.isFinal) {
+          finalTranscriptRef.current += `${transcript} `;
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      const spokenText = `${finalTranscriptRef.current}${interimTranscript}`.trim();
+      const nextInput = [speechBaseRef.current, spokenText]
+        .filter(Boolean)
+        .join(" ");
+
+      setInput(nextInput);
+      setSpeechStatus(spokenText ? "Listening..." : "Say something");
+      syncTextareaHeight();
+    };
+
+    recognition.onerror = (event) => {
+      // Converts browser speech errors into simple messages the user can understand.
+      const messages: Record<string, string> = {
+        "not-allowed": "Microphone permission was blocked",
+        "service-not-allowed": "Speech service is blocked in this browser",
+        "no-speech": "No speech detected",
+        "audio-capture": "No microphone was found",
+        network: "Speech service network error",
+      };
+
+      setListening(false);
+      setSpeechStatus(messages[event.error] || "Voice input stopped");
+    };
+
+    recognition.onend = () => {
+      // Runs when the browser stops listening.
+      // If any final words were heard, the status confirms they were added.
+      setListening(false);
+      if (finalTranscriptRef.current.trim()) {
+        setSpeechStatus("Voice added to message");
+      }
+    };
+
+    recognitionRef.current = recognition;
+
+    try {
+      recognition.start();
+    } catch {
+      setListening(false);
+      setSpeechStatus("Voice input could not start. Try again.");
+    }
   };
 
   const containerClass = centered
@@ -119,6 +291,8 @@ export default function ChatInput({
                   : "max-h-32 text-[13px] leading-6 sm:text-[14px]"
               }`}
               onKeyDown={(e) => {
+                // Enter sends the message, while Shift+Enter keeps the normal
+                // textarea behavior and adds a new line.
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   if (!interactionLocked && input.trim()) onSend();
@@ -127,7 +301,33 @@ export default function ChatInput({
             />
 
             <button
+              type="button"
+              onClick={toggleSpeechInput}
+              disabled={interactionLocked || !speechSupported}
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition-all duration-200 active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 ${
+                listening
+                  ? "border-red-200 bg-red-50 text-red-600 shadow-[0_0_0_4px_rgba(248,113,113,0.14)] hover:bg-red-100 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300"
+                  : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:bg-white hover:text-slate-950 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-700 dark:hover:text-white"
+              }`}
+              title={
+                !speechSupported
+                  ? "Voice input is not supported in this browser"
+                  : listening
+                  ? "Stop voice input"
+                  : "Start voice input"
+              }
+              aria-label={listening ? "Stop voice input" : "Start voice input"}
+            >
+              {speechSupported ? (
+                <Mic size={18} strokeWidth={2.3} />
+              ) : (
+                <MicOff size={18} strokeWidth={2.3} />
+              )}
+            </button>
+
+            <button
               onClick={() => {
+                // Sends only when the app is ready and the message is not empty.
                 if (!interactionLocked && input.trim()) onSend();
               }}
               disabled={interactionLocked || !input.trim()}
@@ -166,7 +366,7 @@ export default function ChatInput({
 
           <div className="flex items-center justify-between border-t border-slate-200/80 px-4 py-2 text-[10px] text-slate-500 dark:border-slate-800 dark:text-slate-400">
             <span>Shift + Enter for a new line</span>
-            <span>AI can make mistakes</span>
+            <span>{speechStatus || "AI can make mistakes"}</span>
           </div>
         </div>
       </div>
