@@ -65,7 +65,8 @@ const localTools: AgentTool[] = [
       type: "function",
       function: {
         name: "getWeather",
-        description: "Get the current weather for a city",
+        description:
+          "Get the current weather for a city including temperature, conditions, and air quality",
         parameters: {
           type: "object",
           properties: { city: { type: "string" } },
@@ -82,7 +83,12 @@ const localTools: AgentTool[] = [
         return result.error;
       }
       // Return a formatted weather string for the AI to include in its response
-      return `${result.city} ${result.temp}°C ${result.weather}`;
+      let weatherStr = `${result.city} ${result.temp}°C ${result.weather}`;
+      // Add AQI data if available
+      if (result.aqiLevel && result.aqiLevel !== "N/A") {
+        weatherStr += ` | AQI: ${result.aqiLevel} (${result.aqi})`;
+      }
+      return weatherStr;
     },
   },
   {

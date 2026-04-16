@@ -6,7 +6,8 @@
  * 2. Cleans the city name to ensure valid API calls
  * 3. Sets a 5-second timeout to prevent hanging requests
  * 4. Calls the OpenWeather API with metric units (Celsius)
- * 5. Returns weather data or a friendly error message
+ * 5. Fetches AQI data using coordinates from weather response
+ * 6. Returns weather data + AQI or a friendly error message
  *
  * The function handles several types of errors gracefully:
  * - Missing API key: Returns a clear error message
@@ -21,6 +22,8 @@
  * - humidity: Percentage humidity (0-100)
  * - wind: Wind speed in m/s
  * - icon: OpenWeather icon code for the condition
+ * - aqi: Air Quality Index (1-5)
+ * - aqiLevel: Human-readable AQI level
  *
  * @param city - City name to get weather for (e.g., "London", "Tokyo")
  * @returns Promise resolving to weather data object or error object
@@ -33,6 +36,7 @@ export async function getWeather(city: string) {
 
     // If no API key is configured, return a helpful error
     if (!API_KEY) {
+      console.error("Weather API key is not configured");
       return { error: "❌ API key missing" };
     }
 
@@ -45,40 +49,94 @@ export async function getWeather(city: string) {
 
     // If the city name is empty after cleaning, it was invalid
     if (!cleanCity) {
+      console.error("Invalid city name after cleaning:", city);
       return { error: "❌ Invalid city name" };
     }
 
+    console.log("Fetching weather for city:", cleanCity);
+
     // Set up a timeout so the request doesn't hang forever (5 seconds max)
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const timeout = setTimeout(() => {
+      console.warn("Weather request timeout for city:", cleanCity);
+      controller.abort();
+    }, 5000);
 
-    // Make the API request to OpenWeather
-    const res = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?q=${cleanCity}&appid=${API_KEY}&units=metric`,
-      { signal: controller.signal }
-    );
+    try {
+      // Make the API request to OpenWeather
+      const res = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=${cleanCity}&appid=${API_KEY}&units=metric`,
+        { signal: controller.signal }
+      );
 
-    // Clear the timeout since the request completed
-    clearTimeout(timeout);
+      // Clear the timeout since the request completed
+      clearTimeout(timeout);
 
-    // Parse the response JSON
-    const data = await res.json();
+      // Parse the response JSON
+      const data = await res.json();
 
-    // Check if the request was successful and the API returned weather data
-    if (!res.ok || !data.main) {
-      return { error: data.message || "City not found" };
+      console.log("Weather API response:", res.status, data);
+
+      // Check if the request was successful and the API returned weather data
+      if (!res.ok || !data.main) {
+        const errorMsg = data.message || "City not found";
+        console.error("Weather API error:", errorMsg);
+        return { error: errorMsg };
+      }
+
+      // Fetch AQI data using the coordinates from weather response
+      let aqi = null;
+      let aqiLevel = "N/A";
+
+      if (data.coord) {
+        try {
+          console.log("Fetching AQI data for coordinates:", data.coord);
+          const aqiRes = await fetch(
+            `https://api.openweathermap.org/data/2.5/air_pollution?lat=${data.coord.lat}&lon=${data.coord.lon}&appid=${API_KEY}`,
+            { signal: controller.signal }
+          );
+
+          if (aqiRes.ok) {
+            const aqiData = await aqiRes.json();
+            aqi = aqiData.list?.[0]?.main?.aqi;
+            console.log("AQI data:", aqi);
+
+            // Convert numeric AQI to human-readable level
+            const aqiLevels: { [key: number]: string } = {
+              1: "Good",
+              2: "Fair",
+              3: "Moderate",
+              4: "Poor",
+              5: "Very Poor",
+            };
+            aqiLevel = aqiLevels[aqi] || "N/A";
+          }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (e) {
+          // AQI fetch failed, but weather data is still valid
+          console.warn("AQI fetch failed:", e);
+        }
+      }
+
+      const result = {
+        city: data.name,
+        temp: Math.round(data.main.temp), // Round to nearest degree
+        weather: data.weather?.[0]?.description || "N/A",
+        humidity: data.main.humidity,
+        wind: data.wind.speed,
+        icon: data.weather?.[0]?.icon,
+        aqi: aqi,
+        aqiLevel: aqiLevel,
+      };
+
+      console.log("Weather tool result:", result);
+      return result;
+    } finally {
+      clearTimeout(timeout);
     }
-
-    // Extract and format weather data to return
-    return {
-      city: data.name,
-      temp: Math.round(data.main.temp), // Round to nearest degree
-      weather: data.weather?.[0]?.description || "N/A",
-      humidity: data.main.humidity,
-      wind: data.wind.speed,
-      icon: data.weather?.[0]?.icon,
-    };
   } catch (error: any) {
+    console.error("Weather tool error:", error);
+
     // Handle timeout errors specifically
     if (error.name === "AbortError") {
       return { error: "⏱ Weather request timeout" };
