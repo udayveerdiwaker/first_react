@@ -58,6 +58,9 @@ export default function ChatInput({
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const speechBaseRef = useRef("");
   const finalTranscriptRef = useRef("");
+  const speechStartingRef = useRef(false);
+  const speechErrorRef = useRef(false);
+  const speechStoppedByUserRef = useRef(false);
   const [expanded, setExpanded] = useState(false);
   const [listening, setListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(true);
@@ -133,25 +136,52 @@ export default function ChatInput({
     });
   };
 
+  const getSpeechRecognitionApi = () =>
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  const checkMicrophonePermission = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) return true;
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach((track) => track.stop());
+    return true;
+  };
+
   // Starts or stops microphone-to-text input.
   // When listening starts, it creates a browser speech recognizer and appends
   // recognized words to the existing message text.
-  const toggleSpeechInput = () => {
-    if (!speechSupported || interactionLocked) return;
+  const toggleSpeechInput = async () => {
+    if (!speechSupported || interactionLocked || speechStartingRef.current) {
+      return;
+    }
 
     if (listening) {
+      speechStoppedByUserRef.current = true;
       recognitionRef.current?.stop();
       setListening(false);
       setSpeechStatus("Voice input stopped");
       return;
     }
 
-    const SpeechRecognitionApi =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognitionApi = getSpeechRecognitionApi();
 
     if (!SpeechRecognitionApi) {
       setSpeechSupported(false);
       setSpeechStatus("Voice input is not supported in this browser");
+      return;
+    }
+
+    speechStartingRef.current = true;
+    speechErrorRef.current = false;
+    speechStoppedByUserRef.current = false;
+    setSpeechStatus("Starting microphone...");
+
+    try {
+      await checkMicrophonePermission();
+    } catch {
+      speechStartingRef.current = false;
+      setListening(false);
+      setSpeechStatus("Microphone permission was blocked");
       return;
     }
 
@@ -160,10 +190,11 @@ export default function ChatInput({
     finalTranscriptRef.current = "";
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = "en-US";
+    recognition.lang = navigator.language || "en-US";
 
     recognition.onstart = () => {
       // The browser has successfully started listening to the microphone.
+      speechStartingRef.current = false;
       setListening(true);
       setSpeechStatus("Listening...");
     };
@@ -204,6 +235,8 @@ export default function ChatInput({
         network: "Speech service network error",
       };
 
+      speechStartingRef.current = false;
+      speechErrorRef.current = true;
       setListening(false);
       setSpeechStatus(messages[event.error] || "Voice input stopped");
     };
@@ -211,9 +244,15 @@ export default function ChatInput({
     recognition.onend = () => {
       // Runs when the browser stops listening.
       // If any final words were heard, the status confirms they were added.
+      speechStartingRef.current = false;
       setListening(false);
-      if (finalTranscriptRef.current.trim()) {
+
+      if (speechStoppedByUserRef.current) {
+        setSpeechStatus("Voice input stopped");
+      } else if (finalTranscriptRef.current.trim()) {
         setSpeechStatus("Voice added to message");
+      } else if (!speechErrorRef.current) {
+        setSpeechStatus("Voice input ended");
       }
     };
 
@@ -222,6 +261,7 @@ export default function ChatInput({
     try {
       recognition.start();
     } catch {
+      speechStartingRef.current = false;
       setListening(false);
       setSpeechStatus("Voice input could not start. Try again.");
     }
@@ -285,7 +325,7 @@ export default function ChatInput({
               placeholder="Message ZyroChat"
               rows={1}
               disabled={interactionLocked}
-              className={`min-h-[36px] flex-1 resize-none overflow-y-auto bg-transparent px-1 py-2 text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500 sm:py-1 ${
+              className={`min-h-9 flex-1 resize-none overflow-y-auto bg-transparent px-1 py-2 text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500 sm:py-1 ${
                 centered
                   ? "max-h-40 text-[14px] leading-6 sm:text-[15px]"
                   : "max-h-32 text-[13px] leading-6 sm:text-[14px]"
@@ -300,7 +340,7 @@ export default function ChatInput({
               }}
             />
 
-            <button
+            {/* <button
               type="button"
               onClick={toggleSpeechInput}
               disabled={interactionLocked || !speechSupported}
@@ -323,7 +363,7 @@ export default function ChatInput({
               ) : (
                 <MicOff size={18} strokeWidth={2.3} className="sm:size-[16px]" />
               )}
-            </button>
+            </button> */}
 
             <button
               onClick={() => {

@@ -1,5 +1,6 @@
 import { getSystemPrompt } from "./SystemPrompt";
 import { getToolDefinitions, runToolByName } from "./toolRegistry";
+import { streamOpenRouterText, streamTextByCharacter } from "../lib/streaming";
 import type { ChatMessage } from "./types";
 
 // The URL on the backend where chat requests are sent
@@ -128,49 +129,6 @@ function buildMessages(
 }
 
 /**
- * Streams text character-by-character to the UI with a small delay.
- *
- * This creates a "typewriter" effect where the response appears to be typed out
- * gradually instead of appearing all at once. This:
- * 1. Feels more natural and less jarring to users
- * 2. Lets users see the response as it's happening
- * 3. Provides visual feedback while the AI is working
- *
- * The 5ms delay between characters is carefully chosen: fast enough that
- * the response still flows smoothly, but slow enough to be perceptible.
- *
- * @param text - The full text to stream out
- * @param onChunk - Callback function called each time a new character is added
- * @param signal - AbortSignal allows stopping the stream mid-way
- * @returns The complete text after streaming finishes
- */
-async function streamText(
-  text: string,
-  onChunk: (chunk: string) => void,
-  signal: AbortSignal
-) {
-  let full = "";
-
-  // Process each character one by one
-  for (const character of text) {
-    // Stop if the request was cancelled (user clicked stop)
-    if (signal.aborted) return full;
-
-    // Add the character to our growing text
-    full += character;
-
-    // Call the callback so the UI can update with the new text
-    onChunk(full);
-
-    // Wait 5 milliseconds before adding the next character
-    // This creates the typewriter effect
-    await new Promise((resolve) => setTimeout(resolve, 5));
-  }
-
-  return full;
-}
-
-/**
  * Asks the AI whether to use a tool or just respond normally.
  *
  * This is a preliminary request where:
@@ -252,8 +210,6 @@ async function streamModelResponse(
   onChunk: (chunk: string) => void,
   signal: AbortSignal
 ) {
-  let fullText = "";
-
   const response = await fetchBackendChat({
     method: "POST",
     signal,
@@ -274,63 +230,7 @@ async function streamModelResponse(
     throw new Error("No response body from stream");
   }
 
-  // Set up a reader to read the stream in chunks
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder(); // Converts raw bytes to text
-  let buffer = ""; // Buffer for incomplete lines
-
-  while (true) {
-    // Check if the stream has been aborted
-    if (signal.aborted) {
-      throw new Error("Stream aborted");
-    }
-
-    // Read the next chunk of data
-    const { done, value } = await reader.read();
-    if (done) break; // No more data
-
-    // Convert the raw bytes to a string and add to buffer
-    buffer += decoder.decode(value, { stream: true });
-
-    // Split by newlines to get individual messages
-    const lines = buffer.split("\n");
-
-    // The last partial line stays in the buffer for the next iteration
-    buffer = lines.pop() ?? "";
-
-    // Process each complete line
-    for (const rawLine of lines) {
-      const line = rawLine.trim();
-
-      // Server-Sent Events format: lines start with "data:"
-      if (!line.startsWith("data:")) continue;
-
-      // Extract the JSON part after "data:"
-      const json = line.replace("data:", "").trim();
-
-      // "[DONE]" marks the end of the stream
-      if (json === "[DONE]") {
-        return fullText;
-      }
-
-      try {
-        // Parse the JSON to extract the token
-        const parsed = JSON.parse(json);
-        const token = parsed?.choices?.[0]?.delta?.content;
-
-        // If there's text content, add it to our response
-        if (token) {
-          fullText += token;
-          onChunk(fullText); // Tell the UI about the new text
-        }
-      } catch {
-        // Ignore JSON parse errors - sometimes partial frames come through
-        // The next chunk will likely complete them
-      }
-    }
-  }
-
-  return fullText;
+  return streamOpenRouterText(response.body, onChunk, signal);
 }
 
 /**
@@ -379,14 +279,14 @@ export async function runSmartAgentStream(
       );
 
       // Stream the tool result character-by-character for visual feedback
-      return streamText(toolResult, onChunk, signal);
+      return streamTextByCharacter(toolResult, onChunk, signal);
     }
 
     // Step 3: No tool needed, get the AI's full response and stream it
     return streamModelResponse(userInput, chat, mode, onChunk, signal);
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Handle abort errors gracefully (user clicked stop)
-    if (error.message === "Stream aborted" || signal.aborted) {
+    if ((error instanceof Error && error.message === "Stream aborted") || signal.aborted) {
       const abortError = new Error("Aborted");
       abortError.name = "AbortError";
       throw abortError;
