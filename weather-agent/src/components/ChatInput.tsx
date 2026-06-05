@@ -229,7 +229,7 @@ export default function ChatInput({
 
   const containerClass = centered
     ? "w-full max-w-3xl"
-    : "sticky bottom-0 z-20 border-t border-slate-200/70 bg-white/78 px-3 pb-2.5 pt-2.5 backdrop-blur-2xl dark:border-slate-800/80 dark:bg-slate-950/70 sm:px-5";
+    : "sticky bottom-0 z-20 border-t border-slate-200/70 bg-white/78 px-2.5 pb-3 pt-2.5 backdrop-blur-2xl dark:border-slate-800/80 dark:bg-slate-950/70 sm:px-4 sm:pb-3.5 md:px-5";
 
   const innerClass = centered ? "w-full" : "mx-auto w-full max-w-4xl";
 
@@ -277,7 +277,7 @@ export default function ChatInput({
         >
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-300/80 to-transparent dark:via-slate-600/80" />
 
-          <div className="flex items-end gap-3 px-3 py-2.5 sm:px-4 sm:py-3">
+          <div className="flex items-end gap-2 px-2.5 py-2 sm:gap-3 sm:px-3.5 sm:py-2.5">
             <textarea
               ref={textareaRef}
               value={input}
@@ -285,7 +285,7 @@ export default function ChatInput({
               placeholder="Message ZyroChat"
               rows={1}
               disabled={interactionLocked}
-              className={`min-h-[24px] flex-1 resize-none overflow-y-auto bg-transparent px-1 py-1 text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500 ${
+              className={`min-h-[36px] flex-1 resize-none overflow-y-auto bg-transparent px-1 py-2 text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500 sm:py-1 ${
                 centered
                   ? "max-h-40 text-[14px] leading-6 sm:text-[15px]"
                   : "max-h-32 text-[13px] leading-6 sm:text-[14px]"
@@ -304,7 +304,7 @@ export default function ChatInput({
               type="button"
               onClick={toggleSpeechInput}
               disabled={interactionLocked || !speechSupported}
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition-all duration-200 active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 ${
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition-all duration-200 active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 sm:h-10 sm:w-10 ${
                 listening
                   ? "border-red-200 bg-red-50 text-red-600 shadow-[0_0_0_4px_rgba(248,113,113,0.14)] hover:bg-red-100 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300"
                   : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:bg-white hover:text-slate-950 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-700 dark:hover:text-white"
@@ -319,9 +319,9 @@ export default function ChatInput({
               aria-label={listening ? "Stop voice input" : "Start voice input"}
             >
               {speechSupported ? (
-                <Mic size={18} strokeWidth={2.3} />
+                <Mic size={18} strokeWidth={2.3} className="sm:size-[16px]" />
               ) : (
-                <MicOff size={18} strokeWidth={2.3} />
+                <MicOff size={18} strokeWidth={2.3} className="sm:size-[16px]" />
               )}
             </button>
 
@@ -331,7 +331,7 @@ export default function ChatInput({
                 if (!interactionLocked && input.trim()) onSend();
               }}
               disabled={interactionLocked || !input.trim()}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:hover:scale-100 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:disabled:bg-slate-700 dark:disabled:text-slate-500"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:hover:scale-100 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:disabled:bg-slate-700 dark:disabled:text-slate-500 sm:h-10 sm:w-10"
               title={
                 interactionLocked
                   ? "Wait for the current response to finish"
@@ -339,9 +339,9 @@ export default function ChatInput({
               }
             >
               {loading ? (
-                <Square size={15} fill="currentColor" />
+                <Square size={16} fill="currentColor" className="sm:size-[15px]" />
               ) : (
-                <ArrowUp size={18} strokeWidth={2.5} />
+                <ArrowUp size={18} strokeWidth={2.5} className="sm:size-[18px]" />
               )}
             </button>
           </div>

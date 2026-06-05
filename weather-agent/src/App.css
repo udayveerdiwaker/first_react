@@ -1,0 +1,49 @@
+/* Responsive Layout Improvements for All Devices */
+
+/* Mobile-first responsive utilities */
+@media (max-width: 640px) {
+  body {
+    font-size: 14px;
+  }
+
+  /* Optimize touch targets for mobile (min 44px height) */
+  button, input, textarea {
+    min-height: 44px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  /* Tablet optimizations */
+  body {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 1025px) {
+  /* Desktop optimizations */
+  body {
+    font-size: 15px;
+  }
+}
+
+/* Ensure proper scrolling on mobile */
+html, body {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input, textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Prevent zoom on input focus (iOS) */
+input, textarea, select {
+  font-size: 16px;
+}
+
+/* Improve performance with hardware acceleration */
+.animate-fadeIn, .animate-float {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}

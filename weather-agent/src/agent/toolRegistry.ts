@@ -133,6 +133,26 @@ const localTools: AgentTool[] = [
  */
 let cachedDefinitions: AgentToolDefinition[] | null = null;
 
+function getLocalToolDefinitions() {
+  return localTools.map((tool) => tool.definition);
+}
+
+function mergeToolDefinitions(
+  localDefinitions: AgentToolDefinition[],
+  backendDefinitions: AgentToolDefinition[]
+) {
+  const localNames = new Set(
+    localDefinitions.map((definition) => definition.function.name)
+  );
+
+  return [
+    ...localDefinitions,
+    ...backendDefinitions.filter(
+      (definition) => !localNames.has(definition.function.name)
+    ),
+  ];
+}
+
 /**
  * Fetches all available tool definitions from the backend (plus local tools).
  *
@@ -152,13 +172,16 @@ export async function getToolDefinitions(signal?: AbortSignal) {
   // If we've already loaded the definitions, just return the cached version
   if (cachedDefinitions) return cachedDefinitions;
 
+  const localDefinitions = getLocalToolDefinitions();
+
   try {
-    // Try to get tool definitions from the backend
-    cachedDefinitions = await getMcpToolDefinitions(signal);
+    // Try to get tool definitions from the backend and keep local tools available.
+    const backendDefinitions = await getMcpToolDefinitions(signal);
+    cachedDefinitions = mergeToolDefinitions(localDefinitions, backendDefinitions);
     return cachedDefinitions;
   } catch {
     // If backend is unavailable, fall back to local tools only
-    return localTools.map((tool) => tool.definition);
+    return localDefinitions;
   }
 }
 

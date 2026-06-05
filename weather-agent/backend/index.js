@@ -17,7 +17,8 @@ const dotenv = require("dotenv");
 const path = require("path");
 const { OpenAI } = require("openai");
 
-// Load environment variables from .env file
+// Load environment variables from the project root, then fill any backend-only values.
+dotenv.config({ path: path.join(__dirname, "..", ".env") });
 dotenv.config({ path: path.join(__dirname, ".env") });
 
 // Create Express app
@@ -111,6 +112,48 @@ function calculate(expression) {
   } catch {
     return "Invalid calculation";
   }
+}
+
+/**
+ * Fetches current weather for a given city.
+ *
+ * Uses OpenWeather's current weather endpoint and returns a concise string
+ * that the chat model can include directly in its reply.
+ *
+ * @param city - City name to get weather for
+ * @returns Weather formatted string
+ * @throws Error if the API key is missing or the weather request fails
+ */
+async function getWeather(city) {
+  const apiKey =
+    process.env.WEATHER_API_KEY || process.env.VITE_WEATHER_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("Weather API key not configured");
+  }
+
+  const cleanCity = String(city || "Delhi")
+    .replace(/[^a-z\s]/gi, "")
+    .trim();
+
+  if (!cleanCity) {
+    throw new Error("Invalid city name");
+  }
+
+  const res = await fetch(
+    `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(
+      cleanCity
+    )}&appid=${apiKey}&units=metric`
+  );
+  const data = await res.json();
+
+  if (!res.ok || !data?.main) {
+    throw new Error(data?.message || "Unable to fetch weather");
+  }
+
+  return `${data.name} ${Math.round(data.main.temp)}°C ${
+    data.weather?.[0]?.description || "N/A"
+  } | Humidity: ${data.main.humidity}% | Wind: ${data.wind.speed} m/s`;
 }
 
 /**
@@ -276,6 +319,19 @@ const mcpTools = [
   {
     type: "function",
     function: {
+      name: "getWeather",
+      description:
+        "Get the current weather for a city including temperature, conditions, humidity, and wind",
+      parameters: {
+        type: "object",
+        properties: { city: { type: "string" } },
+        required: ["city"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "getAQI",
       description: "Get the air quality index for a city",
       parameters: {
@@ -320,6 +376,8 @@ async function executeMcpTool(name, args = {}) {
       return getDateTime();
     case "calculate":
       return calculate(String(args.expression || ""));
+    case "getWeather":
+      return getWeather(String(args.city || "Delhi"));
     case "getAQI":
       return getAQI(String(args.city || "Delhi"));
     case "getNews":

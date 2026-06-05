@@ -136,12 +136,13 @@ export default function Sidebar({
       {/* Prevents clicks inside the sidebar from bubbling to the mobile overlay. */}
       <div
         className={`
-          fixed left-0 top-0 z-50 flex h-full w-[288px] flex-col
+          fixed left-0 top-0 z-50 flex h-full w-[85vw] flex-col
           border-r border-slate-200/70 bg-[linear-gradient(180deg,_rgba(255,255,255,0.92)_0%,_rgba(248,250,252,0.98)_100%)]
           text-slate-900 shadow-[0_20px_80px_-50px_rgba(15,23,42,0.45)]
           backdrop-blur-xl transition-transform duration-300
           dark:border-slate-800 dark:bg-[linear-gradient(180deg,_rgba(2,6,23,0.96)_0%,_rgba(15,23,42,0.98)_100%)] dark:text-white
-          md:static md:translate-x-0 md:shadow-none
+          sm:static sm:w-[288px] sm:translate-x-0 sm:shadow-none
+          md:w-[288px]
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
         `}
         onClick={(e) => e.stopPropagation()}

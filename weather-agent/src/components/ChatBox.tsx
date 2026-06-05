@@ -618,81 +618,74 @@ export default function ChatBox({
 
   return (
     <div className="relative flex h-screen flex-1 flex-col bg-[radial-gradient(circle_at_top,_rgba(148,163,184,0.14),_transparent_32%),linear-gradient(180deg,_#f8fafc_0%,_#f1f5f9_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(51,65,85,0.34),_transparent_28%),linear-gradient(180deg,_#020617_0%,_#0f172a_100%)]">
-      <div className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200/70 bg-white/75 px-4 py-3 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/65 sm:px-6">
-        <button
-          onClick={() => setSidebarOpen && setSidebarOpen(true)}
-          className="rounded-xl p-2 text-slate-600 transition hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white md:hidden"
-          title="Toggle sidebar"
-        >
-          <Menu size={20} className="text-slate-900 dark:text-white" />
-        </button>
-        <div className="flex min-w-0 flex-1 flex-col items-center md:items-start">
-          <span className="text-[11px] font-medium uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">
-            ZyroChat
-          </span>
-          <div className="flex min-w-0 items-center gap-2">
-            <h1 className="truncate text-[15px] font-semibold text-slate-900 dark:text-white sm:text-base">
-              {chatIndex !== null && chats[chatIndex]
-                ? chats[chatIndex].title
-                : "New Chat"}
-            </h1>
-            <span className="hidden rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300 sm:inline-flex">
-              Live
+      {/* Header - fully responsive */}
+      <div className="sticky top-0 z-20 flex flex-col gap-2 border-b border-slate-200/70 bg-white/75 px-3 py-2 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/65 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6 sm:py-3">
+        {/* Mobile header - hamburger and title */}
+        <div className="flex items-center justify-between sm:flex-1">
+          <button
+            onClick={() => setSidebarOpen && setSidebarOpen(true)}
+            className="rounded-xl p-2.5 text-slate-600 transition hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white sm:hidden"
+            title="Toggle sidebar"
+          >
+            <Menu size={20} className="text-slate-900 dark:text-white" />
+          </button>
+          <div className="flex min-w-0 flex-1 flex-col items-center sm:items-start">
+            <span className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500 sm:text-[11px]">
+              ZyroChat
             </span>
+            <div className="flex min-w-0 items-center gap-1 sm:gap-2">
+              <h1 className="truncate text-sm font-semibold text-slate-900 dark:text-white sm:text-base">
+                {chatIndex !== null && chats[chatIndex]
+                  ? chats[chatIndex].title
+                  : "New Chat"}
+              </h1>
+              <span className="hidden rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300 sm:inline-flex">
+                Live
+              </span>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        {/* Header actions - responsive layout */}
+        <div className="flex items-center justify-end gap-1 sm:gap-2">
           <ModeSelector mode={mode} setMode={setMode} />
           {!isEmptyChat && (
             <button
               onClick={exportChatAsMarkdown}
-              className="rounded-xl p-2 text-slate-600 transition hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+              className="rounded-xl p-2.5 text-slate-600 transition hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
               title="Export conversation as Markdown"
               aria-label="Export conversation as Markdown"
             >
-              <Download size={17} />
+              <Download size={16} className="sm:size-[17px]" />
             </button>
           )}
           <button
             onClick={toggleTheme}
-            className="rounded-xl p-2 text-slate-600 transition hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+            className="rounded-xl p-2.5 text-slate-600 transition hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
             title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
             aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
           >
-            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+            {theme === "dark" ? <Sun size={16} className="sm:size-[18px]" /> : <Moon size={16} className="sm:size-[18px]" />}
           </button>
         </div>
       </div>
 
+      {/* Stats bar - responsive and hidden on small mobile */}
       {!isEmptyChat && (
-        <div className="border-b border-slate-200/60 bg-white/55 px-3 py-2 backdrop-blur-xl dark:border-slate-800/70 dark:bg-slate-950/35 sm:px-6">
-          <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-2">
-            <div className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/30 dark:text-emerald-300">
+        <div className="border-b border-slate-200/60 bg-white/55 px-3 py-1.5 backdrop-blur-xl dark:border-slate-800/70 dark:bg-slate-950/35 sm:px-6 sm:py-2">
+          <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-1.5 sm:gap-2">
+            <div className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/30 dark:text-emerald-300 sm:px-3 sm:py-1 sm:text-[11px]">
               {mode} mode
             </div>
-            <div className="rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-[11px] text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
+            <div className="hidden rounded-full border border-slate-200 bg-white/80 px-2 py-0.5 text-[10px] text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300 sm:inline-flex sm:px-3 sm:py-1 sm:text-[11px]">
               {totalMessages} messages
             </div>
-            <div className="rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-[11px] text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
+            <div className="hidden rounded-full border border-slate-200 bg-white/80 px-2 py-0.5 text-[10px] text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300 sm:inline-flex sm:px-3 sm:py-1 sm:text-[11px]">
               {userMessages} prompts
             </div>
-            <div className="rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-[11px] text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
+            <div className="hidden rounded-full border border-slate-200 bg-white/80 px-2 py-0.5 text-[10px] text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300 sm:inline-flex sm:px-3 sm:py-1 sm:text-[11px]">
               {botMessages} replies
             </div>
-            {/* {quickModes.map((mode) => (
-              <button
-                key={mode}
-                type="button"
-            onClick={() => {
-              if (interactionLocked) return;
-              setInput(mode);
-            }}
-            disabled={interactionLocked}
-            className="rounded-full border border-cyan-200/80 bg-cyan-50 px-3 py-1 text-[11px] text-cyan-700 transition hover:border-cyan-300 hover:bg-cyan-100 dark:border-cyan-900/70 dark:bg-cyan-950/30 dark:text-cyan-300 dark:hover:bg-cyan-950/50"
-          >
-            {mode}
-          </button>
-            ))} */}
           </div>
         </div>
       )}
@@ -743,9 +736,9 @@ export default function ChatBox({
           <div
             ref={containerRef}
             onScroll={handleScroll}
-            className="flex-1 overflow-y-auto scroll-smooth px-3 py-4 sm:px-5 sm:py-6"
+            className="flex-1 overflow-y-auto scroll-smooth px-2.5 py-3 sm:px-5 sm:py-6 md:px-5"
           >
-            <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 pb-24">
+            <div className="mx-auto flex w-full max-w-4xl flex-col gap-3 sm:gap-4 pb-24">
               {chat.map((msg: Message, idx: number) => {
                 // Prepares display flags for each message row.
                 // The index is used for editing, deleting, and action buttons.
@@ -759,15 +752,15 @@ export default function ChatBox({
                     }`}
                   >
                     <div
-                      className={`group relative w-full max-w-[52rem] p-3.5 sm:p-4 ${
+                      className={`group relative w-full max-w-[52rem] p-2.5 sm:p-3 md:p-4 ${
                         msg.role === "user"
                           ? "max-w-xl rounded-[22px] rounded-br-md border border-slate-300/70 bg-white/94 text-slate-900 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.4)] dark:border-slate-700/80 dark:bg-slate-800/95 dark:text-white"
                           : "rounded-[24px] border border-slate-200/80 bg-white/88 text-slate-900 shadow-[0_14px_40px_-30px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/72 dark:text-white"
                       }`}
                     >
-                      <div className="mb-2.5 flex items-center gap-2 text-[11px] font-medium tracking-wide text-slate-400 dark:text-slate-500">
+                      <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-medium tracking-wide text-slate-400 dark:text-slate-500 sm:mb-2.5 sm:gap-2 sm:text-[11px]">
                         <span
-                          className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-[11px] ${
+                          className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] sm:h-7 sm:w-7 ${
                             msg.role === "user"
                               ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950"
                               : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"

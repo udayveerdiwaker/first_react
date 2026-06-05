@@ -140,34 +140,53 @@ export default function App() {
   }
 
   // Main app layout after loading is complete
+  // Fully responsive: sidebar is hidden on mobile, visible on desktop
   return (
-    <div className="relative flex h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_24%),radial-gradient(circle_at_80%_0%,_rgba(16,185,129,0.12),_transparent_18%),linear-gradient(180deg,_#f8fbff_0%,_#eef4f8_100%)] text-white dark:bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.1),_transparent_24%),radial-gradient(circle_at_80%_0%,_rgba(16,185,129,0.1),_transparent_18%),linear-gradient(180deg,_#020617_0%,_#0f172a_100%)]">
-      {/* Subtle grid background pattern */}
-      <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.08)_1px,transparent_1px)] [background-size:44px_44px]" />
+    <div className="relative flex h-screen flex-col overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_24%),radial-gradient(circle_at_80%_0%,_rgba(16,185,129,0.12),_transparent_18%),linear-gradient(180deg,_#f8fbff_0%,_#eef4f8_100%)] text-white dark:bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.1),_transparent_24%),radial-gradient(circle_at_80%_0%,_rgba(16,185,129,0.1),_transparent_18%),linear-gradient(180deg,_#020617_0%,_#0f172a_100%)] sm:flex-row">
+      {/* Subtle grid background pattern - responsive opacity */}
+      <div className="pointer-events-none absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.08)_1px,transparent_1px)] [background-size:44px_44px] sm:opacity-40" />
 
-      {/* Left sidebar - shows list of saved chats */}
-      <Sidebar
-        chats={chats}
-        setChat={setChat}
-        setChats={setChats}
-        setChatIndex={setChatIndex}
-        chatIndex={chatIndex}
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        interactionLocked={interactionLocked}
-      />
+      {/* Left sidebar - shows list of saved chats - hidden on mobile */}
+      <div className="hidden sm:flex sm:flex-col">
+        <Sidebar
+          chats={chats}
+          setChat={setChat}
+          setChats={setChats}
+          setChatIndex={setChatIndex}
+          chatIndex={chatIndex}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          interactionLocked={interactionLocked}
+        />
+      </div>
 
-      {/* Main chat window - shows messages and input */}
-      <ChatBox
-        chat={chat}
-        setChat={setChat}
-        chats={chats}
-        setChats={setChats}
-        chatIndex={chatIndex}
-        setChatIndex={setChatIndex}
-        setSidebarOpen={setSidebarOpen}
-        setInteractionLocked={setInteractionLocked}
-      />
+      {/* Mobile sidebar overlay - visible only on mobile */}
+      <div className="sm:hidden">
+        <Sidebar
+          chats={chats}
+          setChat={setChat}
+          setChats={setChats}
+          setChatIndex={setChatIndex}
+          chatIndex={chatIndex}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          interactionLocked={interactionLocked}
+        />
+      </div>
+
+      {/* Main chat window - shows messages and input - responsive flex-1 */}
+      <div className="relative flex-1 overflow-hidden">
+        <ChatBox
+          chat={chat}
+          setChat={setChat}
+          chats={chats}
+          setChats={setChats}
+          chatIndex={chatIndex}
+          setChatIndex={setChatIndex}
+          setSidebarOpen={setSidebarOpen}
+          setInteractionLocked={setInteractionLocked}
+        />
+      </div>
     </div>
   );
 }
