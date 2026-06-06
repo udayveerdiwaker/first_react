@@ -19,4 +19,11 @@ export default defineConfig({
     react(), // Enables JSX, Fast Refresh for hot module replacement
     tailwindcss(), // Processes Tailwind CSS and optimizes it
   ],
+  server: {
+    allowedHosts: [
+      "riot-protector-operate.ngrok-free.dev"
+    ]
+  }
 });
+
+
