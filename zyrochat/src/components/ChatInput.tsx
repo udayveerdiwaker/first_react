@@ -340,7 +340,7 @@ export default function ChatInput({
               }}
             />
 
-            {/* <button
+            <button
               type="button"
               onClick={toggleSpeechInput}
               disabled={interactionLocked || !speechSupported}
@@ -363,7 +363,7 @@ export default function ChatInput({
               ) : (
                 <MicOff size={18} strokeWidth={2.3} className="sm:size-[16px]" />
               )}
-            </button> */}
+            </button>
 
             <button
               onClick={() => {

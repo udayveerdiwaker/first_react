@@ -1,4 +1,5 @@
 import { getWeather } from "../tools/weather";
+import { generateImage } from "../tools/image";
 import { executeMcpTool, getMcpToolDefinitions } from "./mcpClient";
 import type { AgentTool, AgentToolDefinition } from "./types";
 
@@ -58,6 +59,7 @@ function calculate(expression: string) {
  * 1. getWeather: Fetches current weather for a city
  * 2. getDateTime: Returns current date and time
  * 3. calculate: Evaluates math expressions
+ * 4. generateImage: Creates an image URL from a text prompt
  */
 const localTools: AgentTool[] = [
   {
@@ -121,6 +123,36 @@ const localTools: AgentTool[] = [
     // When the AI needs to calculate something, run this function
     async run(args) {
       return calculate(String(args.expression || ""));
+    },
+  },
+  {
+    definition: {
+      type: "function",
+      function: {
+        name: "generateImage",
+        description:
+          "Generate an image from a text prompt and return it as Markdown so it appears in the chat",
+        parameters: {
+          type: "object",
+          properties: {
+            prompt: {
+              type: "string",
+            },
+          },
+          required: ["prompt"],
+        },
+      },
+    },
+    async run(args) {
+      const prompt = String(args.prompt || "").trim();
+
+      if (!prompt) {
+        return "Please provide a prompt for the image you want to generate.";
+      }
+
+      const imageUrl = generateImage(prompt);
+
+      return `Generated image for: ${prompt}\n\n![Generated image](${imageUrl})\n\n[Open full image](${imageUrl})`;
     },
   },
 ];

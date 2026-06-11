@@ -73,6 +73,44 @@ const CodeBlockCopy = React.memo(
 
 CodeBlockCopy.displayName = "CodeBlockCopy";
 
+const MarkdownImage = React.memo(
+  ({ src, alt }: { src?: string; alt?: string }) => {
+    const [failed, setFailed] = useState(false);
+
+    if (!src) return null;
+
+    if (failed) {
+      return (
+        <div className="my-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-[13px] text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+          <p className="mb-2">Image could not load.</p>
+          <a
+            href={src}
+            target="_blank"
+            rel="noreferrer"
+            className="break-all underline underline-offset-2"
+          >
+            Open generated image URL
+          </a>
+        </div>
+      );
+    }
+
+    return (
+      <a href={src} target="_blank" rel="noreferrer" className="block">
+        <img
+          src={src}
+          alt={alt || "Generated image"}
+          loading="lazy"
+          onError={() => setFailed(true)}
+          className="my-4 max-h-[520px] w-full rounded-2xl border border-slate-200 object-contain shadow-[0_18px_45px_-28px_rgba(15,23,42,0.5)] dark:border-slate-700"
+        />
+      </a>
+    );
+  }
+);
+
+MarkdownImage.displayName = "MarkdownImage";
+
 // Converts assistant markdown text into styled React elements.
 // It supports GitHub-style markdown, syntax-highlighted code blocks, tables,
 // links, lists, headings, and other common response formatting.
@@ -197,6 +235,10 @@ const MarkdownRenderer = React.memo(({ text }: { text: string }) => {
             >
               {children}
             </a>
+          ),
+          // Renders generated images and other markdown images inside chat replies.
+          img: ({ src, alt }) => (
+            <MarkdownImage src={src} alt={alt || undefined} />
           ),
         }}
       >

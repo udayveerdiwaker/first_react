@@ -233,6 +233,28 @@ async function streamModelResponse(
   return streamOpenRouterText(response.body, onChunk, signal);
 }
 
+function isImageGenerationRequest(input: string) {
+  const text = input.toLowerCase();
+  const actionPattern =
+    /\b(generate|create|make|draw|design|render|produce)\b/;
+  const imagePattern =
+    /\b(image|img|picture|photo|art|artwork|illustration|poster|logo|wallpaper)\b/;
+
+  return actionPattern.test(text) && imagePattern.test(text);
+}
+
+function getImagePrompt(input: string) {
+  return input
+    .replace(
+      /\b(please\s+)?(generate|create|make|draw|design|render|produce)\b/gi,
+      ""
+    )
+    .replace(/\b(an?|the)?\s*(image|img|picture|photo|artwork|art)\s*(of|for)?\b/gi, "")
+    .trim()
+    .replace(/^[:,-]\s*/, "")
+    .trim();
+}
+
 /**
  * The main entry point for the smart agent.
  *
@@ -265,6 +287,13 @@ export async function runSmartAgentStream(
   signal: AbortSignal
 ) {
   try {
+    if (isImageGenerationRequest(userInput)) {
+      const prompt = getImagePrompt(userInput) || userInput;
+      const toolResult = await runToolByName("generateImage", { prompt }, signal);
+
+      return streamTextByCharacter(toolResult, onChunk, signal);
+    }
+
     // Step 1: Ask the AI if a tool is needed
     const message = await requestToolDecision(userInput, chat, mode, signal);
 
