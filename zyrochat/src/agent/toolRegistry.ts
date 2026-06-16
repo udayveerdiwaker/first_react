@@ -150,9 +150,13 @@ const localTools: AgentTool[] = [
         return "Please provide a prompt for the image you want to generate.";
       }
 
-      const imageUrl = generateImage(prompt);
-
-      return `Generated image for: ${prompt}\n\n![Generated image](${imageUrl})\n\n[Open full image](${imageUrl})`;
+      try {
+        const imageUrl = await generateImage(prompt);
+        return `Generated image for: ${prompt}\n\n![Generated image](${imageUrl})\n\n[Open full image](${imageUrl})`;
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to generate image';
+        return `Error generating image: ${errorMessage}`;
+      }
     },
   },
 ];

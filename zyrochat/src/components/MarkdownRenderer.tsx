@@ -81,17 +81,17 @@ const MarkdownImage = React.memo(
 
     if (failed) {
       return (
-        <div className="my-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-[13px] text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
-          <p className="mb-2">Image could not load.</p>
+        <span className="inline-block my-2 rounded border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+          Image could not load.{" "}
           <a
             href={src}
             target="_blank"
             rel="noreferrer"
-            className="break-all underline underline-offset-2"
+            className="underline underline-offset-2"
           >
-            Open generated image URL
+            Open in new tab
           </a>
-        </div>
+        </span>
       );
     }
 
