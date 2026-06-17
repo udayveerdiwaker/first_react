@@ -25,6 +25,7 @@ import {
   Moon,
   Sun,
   Download,
+  Play,
 } from "lucide-react";
 import ChatInput from "./ChatInput";
 import MarkdownRenderer from "./MarkdownRenderer";
@@ -89,6 +90,7 @@ export default function ChatBox({
   const [mode, setMode] = useState<string>(
     () => localStorage.getItem("zyrochat-mode") || "normal"
   );
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -138,12 +140,18 @@ export default function ChatBox({
     }
 
     const timer = setTimeout(() => {
-      // Gives React a moment to render the new message before scrolling to it.
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
+      // During active streaming, we use 'auto' scroll behavior to avoid animation lag.
+      // For static page changes or new messages, we use 'smooth' scroll behavior.
+      const lastMessage = chat[chat.length - 1];
+      const isStreaming = lastMessage?.loading || (lastMessage?.role === "bot" && loading);
+
+      bottomRef.current?.scrollIntoView({
+        behavior: isStreaming ? "auto" : "smooth",
+      });
+    }, 50);
 
     return () => clearTimeout(timer);
-  }, [chat.length]);
+  }, [chat.length, chat[chat.length - 1]?.text, loading]);
 
   // Tracks whether the user is near the bottom of the chat.
   // This decides whether new messages should auto-scroll or show a "new below" indicator.
@@ -237,6 +245,44 @@ export default function ChatBox({
     anchor.click();
     URL.revokeObjectURL(url);
   }, [chat, chatIndex, chats, mode]);
+
+  // Downloads the current conversation as a plain TXT file.
+  const exportChatAsTXT = useCallback(() => {
+    if (!chat.length) return;
+
+    const title =
+      (chatIndex !== null && chats[chatIndex]?.title) ||
+      "ZyroChat Conversation";
+    const textContent = [
+      `=== ${title} ===`,
+      `Exported: ${new Date().toLocaleString()}`,
+      `Mode: ${mode}`,
+      "",
+      ...chat.map((message) => {
+        const speaker = message.role === "user" ? "User" : "ZyroChat";
+        return `[${speaker}]:\n${message.text}\n`;
+      }),
+    ].join("\n");
+
+    const blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    const safeFileName =
+      title
+        .replace(/[^\w\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .toLowerCase() || "zyrochat-conversation";
+
+    anchor.href = url;
+    anchor.download = `${safeFileName}.txt`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }, [chat, chatIndex, chats, mode]);
+
+  // Exports the conversation as a clean PDF using the browser's print engine.
+  const exportChatAsPDF = useCallback(() => {
+    window.print();
+  }, []);
 
   // Updates one saved chat's timestamp and, optionally, its messages.
   // This keeps the sidebar order and local storage aligned with the latest reply.
@@ -451,7 +497,21 @@ export default function ChatBox({
               responseChatIndexRef.current === currentChatIndex &&
               currentChatIndex === viewedChatIndexRef.current
             ) {
-              setChat(updatedChat);
+              if (fullReply.trim()) {
+                const partialMessage: Message = {
+                  role: "bot",
+                  text: fullReply,
+                  loading: false,
+                  error: false,
+                };
+                const finalChat = [...updatedChat, partialMessage];
+                setChat(finalChat);
+                if (currentChatIndex !== null) {
+                  touchChatSession(currentChatIndex, finalChat);
+                }
+              } else {
+                setChat(updatedChat);
+              }
             }
             setLoading(false);
             return;
@@ -502,6 +562,91 @@ export default function ChatBox({
     [mode, setChat, setChats, stoppedByUser, touchChatSession]
   );
 
+  // Continues generating the last assistant response if it got cut off.
+  const handleContinue = useCallback(async () => {
+    if (chatIndex === null || chat.length === 0 || loading || interactionLocked) return;
+
+    const lastMsgIdx = chat.length - 1;
+    if (chat[lastMsgIdx].role !== "bot") return;
+
+    const originalText = chat[lastMsgIdx].text;
+
+    responseChatIndexRef.current = chatIndex;
+    userScrolledRef.current = false;
+    setLoading(true);
+    setStoppedByUser(false);
+
+    try {
+      abortRef.current = new AbortController();
+      let continuationReply = "";
+
+      const continuationPrompt = "Continue the response from where it was cut off. Do not repeat any previous text, start exactly with the next character/word, and continue seamlessly.";
+
+      try {
+        await runSmartAgentStream(
+          continuationPrompt,
+          chat, // Send full chat including the partial bot message so it has context
+          mode,
+          (chunk: string) => {
+            if (chatIndex !== viewedChatIndexRef.current) return;
+
+            continuationReply = chunk;
+            if (userScrolledRef.current) {
+              setHasNewBelow(true);
+              setShowScrollDown(true);
+            }
+            setChat((prevChat) => {
+              const updated = [...prevChat];
+              if (updated[lastMsgIdx]) {
+                updated[lastMsgIdx] = {
+                  ...updated[lastMsgIdx],
+                  text: originalText + continuationReply,
+                  loading: false,
+                  error: false,
+                };
+              }
+              return updated;
+            });
+          },
+          abortRef.current.signal
+        );
+      } catch (streamError: Error | unknown) {
+        const error = streamError as { name?: string };
+        if (error?.name === "AbortError" || stoppedByUser) {
+          setLoading(false);
+          if (chatIndex !== null) {
+            setChat((prevChat) => {
+              touchChatSession(chatIndex, prevChat);
+              return prevChat;
+            });
+          }
+          return;
+        }
+        throw streamError;
+      }
+
+      setLoading(false);
+
+      if (responseChatIndexRef.current === chatIndex) {
+        const finalChatText = originalText + continuationReply;
+        const updatedChat = chat.map((msg, idx) =>
+          idx === lastMsgIdx
+            ? { ...msg, text: finalChatText, loading: false, error: false }
+            : msg
+        );
+
+        if (chatIndex === viewedChatIndexRef.current) {
+          setChat(updatedChat);
+        }
+
+        touchChatSession(chatIndex, updatedChat);
+      }
+    } catch (error: Error | unknown) {
+      console.error("Continuation error:", error);
+      setLoading(false);
+    }
+  }, [chat, chatIndex, loading, interactionLocked, mode, touchChatSession, stoppedByUser]);
+
   useEffect(() => {
     // After a user edits a message, this effect waits until the UI is ready,
     // then generates a fresh response for the edited text.
@@ -529,6 +674,15 @@ export default function ChatBox({
       setShouldRegenerate(false);
     }
   }, [shouldRegenerate, chat, loading, generateResponse, chatIndex, chats]);
+
+  // Stops the current AI generation/streaming immediately.
+  const handleStop = useCallback(() => {
+    setStoppedByUser(true);
+    if (abortRef.current) {
+      abortRef.current.abort();
+    }
+    setLoading(false);
+  }, []);
 
   // Sends the current text from the input box.
   // It creates a new saved chat when needed, clears the input, and starts streaming.
@@ -650,14 +804,50 @@ export default function ChatBox({
         <div className="flex items-center justify-end gap-1 sm:gap-2">
           <ModeSelector mode={mode} setMode={setMode} />
           {!isEmptyChat && (
-            <button
-              onClick={exportChatAsMarkdown}
-              className="rounded-xl p-2.5 text-slate-600 transition hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
-              title="Export conversation as Markdown"
-              aria-label="Export conversation as Markdown"
-            >
-              <Download size={16} className="sm:size-[17px]" />
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setExportMenuOpen(!exportMenuOpen)}
+                className="rounded-xl p-2.5 text-slate-600 transition hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                title="Export conversation"
+                aria-label="Export conversation"
+              >
+                <Download size={16} className="sm:size-[17px]" />
+              </button>
+              {exportMenuOpen && (
+                <div
+                  className="absolute right-0 mt-2 w-40 overflow-hidden rounded-2xl border border-slate-200 bg-white/95 p-1 shadow-xl backdrop-blur dark:border-slate-800 dark:bg-slate-800/95 z-50 animate-fade-in"
+                  onMouseLeave={() => setExportMenuOpen(false)}
+                >
+                  <button
+                    onClick={() => {
+                      exportChatAsMarkdown();
+                      setExportMenuOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[13px] text-slate-700 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
+                  >
+                    Markdown (.md)
+                  </button>
+                  <button
+                    onClick={() => {
+                      exportChatAsTXT();
+                      setExportMenuOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[13px] text-slate-700 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
+                  >
+                    Plain Text (.txt)
+                  </button>
+                  <button
+                    onClick={() => {
+                      exportChatAsPDF();
+                      setExportMenuOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[13px] text-slate-700 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
+                  >
+                    PDF Transcript (.pdf)
+                  </button>
+                </div>
+              )}
+            </div>
           )}
           <button
             onClick={toggleTheme}
@@ -726,6 +916,7 @@ export default function ChatBox({
               input={input}
               setInput={setInput}
               onSend={handleSend}
+              onStop={handleStop}
               loading={loading}
               centered
             />
@@ -747,16 +938,10 @@ export default function ChatBox({
                 return (
                   <div
                     key={idx}
-                    className={`flex w-full ${
-                      msg.role === "user" ? "justify-end" : "justify-start"
-                    }`}
+                    className="flex w-full justify-start border-b border-slate-100/50 dark:border-slate-800/20 last:border-0 py-2 sm:py-3"
                   >
                     <div
-                      className={`group relative w-full max-w-[52rem] p-2.5 sm:p-3 md:p-4 ${
-                        msg.role === "user"
-                          ? "max-w-xl rounded-[22px] rounded-br-md border border-slate-300/70 bg-white/94 text-slate-900 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.4)] dark:border-slate-700/80 dark:bg-slate-800/95 dark:text-white"
-                          : "rounded-[24px] border border-slate-200/80 bg-white/88 text-slate-900 shadow-[0_14px_40px_-30px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/72 dark:text-white"
-                      }`}
+                      className="group relative w-full p-2.5 sm:p-3 md:p-4 text-slate-900 dark:text-white"
                     >
                       <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-medium tracking-wide text-slate-400 dark:text-slate-500 sm:mb-2.5 sm:gap-2 sm:text-[11px]">
                         <span
@@ -874,14 +1059,24 @@ export default function ChatBox({
                               </button>
 
                               {idx === chat.length - 1 && (
-                                <button
-                                  onClick={handleRegenerate}
-                                  disabled={loading}
-                                  className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                                  title="Regenerate response"
-                                >
-                                  <RotateCcw size={16} />
-                                </button>
+                                <>
+                                  <button
+                                    onClick={handleRegenerate}
+                                    disabled={loading}
+                                    className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                    title="Regenerate response"
+                                  >
+                                    <RotateCcw size={16} />
+                                  </button>
+                                  <button
+                                    onClick={handleContinue}
+                                    disabled={loading}
+                                    className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                    title="Continue generating"
+                                  >
+                                    <Play size={15} />
+                                  </button>
+                                </>
                               )}
                             </>
                           )}
@@ -968,6 +1163,7 @@ export default function ChatBox({
             input={input}
             setInput={setInput}
             onSend={handleSend}
+            onStop={handleStop}
             loading={loading}
             interactionLocked={interactionLocked}
           />

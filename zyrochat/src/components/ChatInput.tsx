@@ -38,6 +38,7 @@ interface ChatInputProps {
   input: string;
   setInput: (value: string) => void;
   onSend: () => void;
+  onStop?: () => void;
   loading: boolean;
   interactionLocked?: boolean;
   centered?: boolean;
@@ -50,6 +51,7 @@ export default function ChatInput({
   input,
   setInput,
   onSend,
+  onStop,
   loading,
   interactionLocked = false,
   centered = false,
@@ -75,7 +77,48 @@ export default function ChatInput({
     // Keeps the typing box focused whenever the input value changes.
     // This makes it easy to keep typing after actions like sending or speech input.
     textareaRef.current?.focus();
+
+    // When the input is programmatically cleared (e.g. after sending), collapse the height
+    if (input === "") {
+      const el = textareaRef.current;
+      if (el) {
+        el.style.height = "auto";
+        setExpanded(false);
+      }
+    }
   }, [input]);
+
+  useEffect(() => {
+    // Automatically focus the input textarea when the user starts typing anywhere on the page
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // 1. If interaction is locked (e.g. AI is loading), do not steal focus
+      if (interactionLocked) return;
+
+      // 2. Ignore if the user is already typing in another input or editable area
+      const activeEl = document.activeElement;
+      if (
+        activeEl &&
+        (activeEl.tagName === "INPUT" ||
+          activeEl.tagName === "TEXTAREA" ||
+          activeEl.getAttribute("contenteditable") === "true")
+      ) {
+        return;
+      }
+
+      // 3. Ignore system shortcuts and command keys (Ctrl, Alt, Meta/Cmd, Esc, Enter, Tab)
+      if (e.ctrlKey || e.altKey || e.metaKey || e.key === "Escape" || e.key === "Enter" || e.key === "Tab") {
+        return;
+      }
+
+      // 4. If a printable character (length is 1) is pressed, focus the chat textarea
+      if (e.key.length === 1) {
+        textareaRef.current?.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [interactionLocked]);
 
   useEffect(() => {
     // Checks whether the current browser has the Web Speech API.
@@ -178,10 +221,17 @@ export default function ChatInput({
 
     try {
       await checkMicrophonePermission();
-    } catch {
+    } catch (err: any) {
       speechStartingRef.current = false;
       setListening(false);
-      setSpeechStatus("Microphone permission was blocked");
+
+      if (err?.name === "NotFoundError" || err?.name === "DevicesNotFoundError") {
+        setSpeechStatus("No microphone was found");
+      } else if (err?.name === "NotReadableError" || err?.name === "TrackStartError") {
+        setSpeechStatus("Microphone is already in use");
+      } else {
+        setSpeechStatus("Microphone permission was blocked");
+      }
       return;
     }
 
@@ -367,13 +417,18 @@ export default function ChatInput({
 
             <button
               onClick={() => {
-                // Sends only when the app is ready and the message is not empty.
-                if (!interactionLocked && input.trim()) onSend();
+                if (loading) {
+                  onStop?.();
+                } else if (!interactionLocked && input.trim()) {
+                  onSend();
+                }
               }}
-              disabled={interactionLocked || !input.trim()}
+              disabled={!loading && (interactionLocked || !input.trim())}
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:hover:scale-100 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:disabled:bg-slate-700 dark:disabled:text-slate-500 sm:h-10 sm:w-10"
               title={
-                interactionLocked
+                loading
+                  ? "Stop generating"
+                  : interactionLocked
                   ? "Wait for the current response to finish"
                   : "Send message (Shift+Enter for new line)"
               }

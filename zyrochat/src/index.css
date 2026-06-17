@@ -113,3 +113,60 @@ html.dark body {
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
+@media print {
+  /* Hide everything except the chat content */
+  header,
+  footer,
+  aside,
+  nav,
+  button,
+  form,
+  .sticky,
+  .border-b.bg-white\/55,
+  .sm\:flex-col,
+  .hidden.sm\:flex,
+  .sm\:hidden,
+  input,
+  textarea,
+  .absolute,
+  .pointer-events-none,
+  .pb-24 {
+    display: none !important;
+  }
+
+  body, html, #root {
+    background: white !important;
+    color: black !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .flex-1, .mx-auto, .max-w-4xl {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Message styling for print transcript */
+  .group {
+    border: none !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+    padding: 16px 0 !important;
+    margin-bottom: 16px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+  }
+
+  .text-slate-900,
+  .dark\:text-white,
+  .text-slate-600,
+  .text-slate-700,
+  .text-slate-300 {
+    color: black !important;
+  }
+}

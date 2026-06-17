@@ -9,6 +9,7 @@ import {
   Edit2,
   Copy,
   Search,
+  Pin,
 } from "lucide-react";
 import { saveChats } from "../store/chatStore";
 
@@ -60,15 +61,26 @@ export default function Sidebar({
     navigator.clipboard.writeText(content);
     setMenuIndex(null);
   };
+  const handleTogglePin = (index: number) => {
+    const updated = chats.map((c: any, i: number) =>
+      i === index ? { ...c, pinned: !c.pinned } : c
+    );
+    setChats(updated);
+    saveChats(updated);
+    setMenuIndex(null);
+  };
 
   const sortedChats = chats
     // Adds the original array index so sorting does not lose where each chat lives
     // in the real saved chat list.
     .map((chat: any, index: number) => ({ chat, index }))
-    .sort(
-      // Newer conversations should appear first in the sidebar.
-      (a: any, b: any) => (b.chat.updatedAt || 0) - (a.chat.updatedAt || 0)
-    );
+    .sort((a: any, b: any) => {
+      // Pinned chats always stay at the top
+      if (a.chat.pinned && !b.chat.pinned) return -1;
+      if (!a.chat.pinned && b.chat.pinned) return 1;
+      // Secondary sorting: newer chats first
+      return (b.chat.updatedAt || 0) - (a.chat.updatedAt || 0);
+    });
 
   // Filters chats by the search box.
   // It checks both the chat title and all message text, so users can search
@@ -345,9 +357,21 @@ export default function Sidebar({
                                       aria-label="Edit chat name"
                                     />
                                   ) : (
-                                    <p className="truncate text-[12px] font-medium">
-                                      {title}
-                                    </p>
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                      <p className="truncate text-[12px] font-medium flex-1">
+                                        {title}
+                                      </p>
+                                      {c.pinned && (
+                                        <Pin
+                                          size={10}
+                                          className={`shrink-0 ${
+                                            isActive
+                                              ? "text-white/80 dark:text-slate-700"
+                                              : "text-cyan-500 fill-cyan-500"
+                                          }`}
+                                        />
+                                      )}
+                                    </div>
                                   )}
                                 </div>
 
@@ -378,6 +402,17 @@ export default function Sidebar({
                                 className="absolute left-2 right-2 top-full z-40 mt-1 overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-xl backdrop-blur dark:border-slate-700 dark:bg-slate-900/95"
                                 onMouseLeave={() => setMenuIndex(null)}
                               >
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleTogglePin(originalIndex);
+                                  }}
+                                  className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-[13px] text-slate-700 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                >
+                                  <Pin size={14} className={c.pinned ? "text-cyan-500 fill-cyan-500" : ""} />
+                                  {c.pinned ? "Unpin" : "Pin"}
+                                </button>
+
                                 <button
                                   onClick={(e) => {
                                     // Switches this row into rename mode and pre-fills

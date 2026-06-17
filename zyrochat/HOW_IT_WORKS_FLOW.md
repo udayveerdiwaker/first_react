@@ -1,198 +1,105 @@
-# How This App Works
+# How ZyroChat Works (Easy Guide)
 
-This file explains the app flow in easy English.
+This guide explains how this chat application works in simple English.
 
-## Big Picture
+---
 
-This project is a React chat app with AI and tools.
+## 🌟 The Big Picture
 
-The user types a message. The app sends the message to the AI. The AI decides if it should answer normally or use a tool, like weather, date/time, calculator, news, or AQI.
+ZyroChat is a chat app where you can talk to an AI assistant. 
+When you type a message, the app sends it to the AI. The AI can either:
+1. **Answer directly** (normal chat).
+2. **Use a Tool** to get real-time info (like Weather, Date & Time, Calculator, News, or Air Quality).
 
-## Simple Flow
+---
 
-```text
-User types message
-        |
-        v
-React UI sends message to smart agent
-        |
-        v
-Smart agent asks AI: "Do you need a tool?"
-        |
-        +-- No tool needed --> AI writes normal answer
-        |
-        +-- Tool needed ----> App runs the tool
-                              |
-                              v
-                         Tool result is shown in chat
-```
-
-## Main Files
-
-| File | What it does |
-| --- | --- |
-| `src/agent/smartAgent.ts` | Main brain flow for chat messages |
-| `src/agent/toolRegistry.ts` | Keeps the list of tools and runs the correct tool |
-| `src/agent/mcpClient.ts` | Talks to the backend MCP endpoints |
-| `src/tools/weather.ts` | Frontend weather tool |
-| `backend/index.js` | Backend server, OpenRouter proxy, and MCP tools |
-| `.env` | Stores API keys |
-
-## Chat Flow
-
-When the user sends a message:
-
-1. The UI calls `runSmartAgentStream()` in `src/agent/smartAgent.ts`.
-2. The smart agent builds the message history.
-3. It sends a small request to the AI asking if a tool is needed.
-4. If the AI does not need a tool, the app streams a normal AI answer.
-5. If the AI needs a tool, the app runs that tool and shows the result.
-
-## Tool Decision Flow
-
-The AI gets a list of available tools from `getToolDefinitions()`.
-
-That function lives in:
+## 🔄 Simple Flow of a Message
 
 ```text
-src/agent/toolRegistry.ts
+User types a message
+       │
+       ▼
+React UI sends the message to the Smart Agent
+       │
+       ▼
+Smart Agent asks the AI: "Do you need to run a tool for this?"
+       │
+       ├──► No Tool Needed ──► AI streams a normal reply
+       │
+       └──► Tool Needed ─────► App runs the correct tool
+                                  │
+                                  ▼
+                              Tool result is shown in the chat
 ```
 
-It combines:
+---
 
-1. Local frontend tools.
-2. Backend MCP tools.
+## 📂 Key Files of the App
 
-Local tools are used first. If a tool is not local, the app sends it to the backend MCP server.
+| File Path | What it does |
+| :--- | :--- |
+| **`src/agent/smartAgent.ts`** | The main brain. It manages chat history and asks the AI for answers. |
+| **`src/agent/toolRegistry.ts`** | Keeps a list of all tools (like weather, calculator) and executes them. |
+| **`src/agent/mcpClient.ts`** | Communicates with the backend server to run backend tools. |
+| **`src/tools/weather.ts`** | Frontend tool that fetches live weather from OpenWeather API. |
+| **`backend/index.js`** | Express backend server. It proxies AI requests and runs backend tools. |
+| **`.env`** | Stores private API keys (OpenWeather, NewsAPI, OpenRouter). |
 
-## Weather Tool Flow
+---
 
-Example user message:
+## 💬 Chat Flow (Step-by-Step)
 
+1. You type a prompt in the text box.
+2. The UI calls **`runSmartAgentStream`** inside `src/agent/smartAgent.ts`.
+3. The app gathers your conversation history so the AI remembers what you said.
+4. The Smart Agent sends a quick request to the AI asking if a tool is needed.
+   * If **Yes**: The app runs the tool (like fetching weather or checking news) and types the result in the chat.
+   * If **No**: The AI writes a normal conversational response.
+
+---
+
+## 🛠️ Local Tools vs. Backend MCP Tools
+
+The app has two types of tools:
+
+### 1. Local Tools (Runs in your Browser)
+These do not need the backend server to run:
+* **Get Date & Time**: Returns the current system date and time.
+* **Calculator**: Solves mathematical equations (e.g., `2 + 2`).
+* **Weather**: Calls the OpenWeather API directly from the browser using your `VITE_WEATHER_API_KEY`.
+
+### 2. Backend MCP Tools (Runs on the Server)
+These run inside the Express server (`backend/index.js`) to protect API keys:
+* **Air Quality (AQI)**: Converts city name to coordinates, then gets pollution metrics.
+* **Top News**: Fetches top news headlines using your news API key.
+* **Location Finder**: Detects your approximate location using your IP address.
+
+---
+
+## 🔑 Environment Keys You Need
+
+Create a `.env` file in the project root with:
 ```text
-What is the weather in Delhi?
+VITE_OPENROUTER_API_KEY = your_openrouter_api_key_here
+VITE_WEATHER_API_KEY = your_openweather_api_key_here
+NEWS_API_KEY = your_news_api_key_here
 ```
 
-Flow:
+---
 
-```text
-User asks weather
-        |
-        v
-AI chooses getWeather tool
-        |
-        v
-toolRegistry runs getWeather
-        |
-        v
-src/tools/weather.ts calls OpenWeather API
-        |
-        v
-Weather result returns to chat
-```
+## 🚀 How to Run the App
 
-The weather API key comes from:
+1. **Start the Backend Server**:
+   ```bash
+   cd backend
+   npm install
+   npm start
+   ```
+   *Runs at http://localhost:5000*
 
-```text
-VITE_WEATHER_API_KEY
-```
-
-This key is stored in `.env`.
-
-## Backend MCP Flow
-
-The backend server is in:
-
-```text
-backend/index.js
-```
-
-It has these MCP endpoints:
-
-```text
-GET  /api/mcp/tools
-POST /api/mcp/execute
-```
-
-`/api/mcp/tools` returns the list of backend tools.
-
-`/api/mcp/execute` runs one backend tool.
-
-Example:
-
-```text
-Frontend asks backend: run getNews
-Backend runs getNews
-Backend returns news result
-Frontend shows result in chat
-```
-
-## OpenRouter Chat Flow
-
-The frontend does not call OpenRouter directly.
-
-Instead, it sends chat requests to:
-
-```text
-POST /api/openrouter/chat
-```
-
-The backend then sends the request to OpenRouter.
-
-This is better because API keys stay on the backend side.
-
-## Environment Variables
-
-The app uses these keys:
-
-```text
-VITE_OPENROUTER_API_KEY
-VITE_WEATHER_API_KEY
-VITE_NEWS_API_KEY
-```
-
-The backend now loads `.env` from the project root, so it can read the same keys.
-
-## How To Run
-
-Start frontend:
-
-```powershell
-npm run dev
-```
-
-Start backend:
-
-```powershell
-cd backend
-npm start
-```
-
-Default backend URL:
-
-```text
-http://localhost:5000
-```
-
-If you change the backend URL, set:
-
-```text
-VITE_BACKEND_URL=http://localhost:5000
-```
-
-## Important Notes
-
-- If backend is running, the app can use backend MCP tools.
-- If backend is not running, local tools like weather, date/time, and calculator can still work.
-- Local tools run inside the frontend.
-- Backend tools run inside `backend/index.js`.
-- Weather uses OpenWeather API.
-- News uses the news API key.
-- Chat answers use OpenRouter.
-
-## Very Short Summary
-
-```text
-React UI -> smartAgent -> AI decides -> toolRegistry -> local tool or backend MCP -> result in chat
-```
-
+2. **Start the React Frontend**:
+   ```bash
+   npm install
+   npm run dev
+   ```
+   *Runs at http://localhost:5173*

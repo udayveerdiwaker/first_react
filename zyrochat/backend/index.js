@@ -485,23 +485,36 @@ app.post("/api/openrouter/chat", async (req, res) => {
       });
     }
 
-    // Handle streaming responses (when client requests stream: true)
+    // 1. If the user's browser asked for streaming, we run this block
     if (req.body?.stream) {
-      // Set headers to enable Server-Sent Events streaming
+      // 2. Set headers to tell the browser that we are sending data continuously (SSE stream)
       res.status(providerResponse.status);
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
       res.setHeader("Connection", "keep-alive");
 
-      // Stream the response directly to the client
+      // 3. Get a reader to read the data chunks arriving from OpenRouter
       const reader = providerResponse.body.getReader();
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        res.write(Buffer.from(value));
+      try {
+        while (true) {
+          // 4. Read the next chunk of raw bytes
+          const { done, value } = await reader.read();
+          
+          // If the AI is done talking, stop the loop
+          if (done) break;
+
+          // 5. Send the raw chunk directly to the browser
+          res.write(Buffer.from(value));
+        }
+      } catch (streamError) {
+        console.error("Error during streaming proxy:", streamError);
+      } finally {
+        // 6. Make sure to unlock the reader when done
+        reader.releaseLock();
       }
 
+      // 7. Tell the browser the stream is finished
       return res.end();
     }
 
@@ -604,66 +617,7 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
-/**
- * Image generation endpoint
- * 
- * Generates and proxies an image from Pollinations.ai
- * This endpoint avoids CORS/ORB issues by serving the image through the backend
- * 
- * @param {string} prompt - The image generation prompt
- * @returns {Blob} The generated image binary data
- */
-app.post("/api/generate-image", async (req, res) => {
-  try {
-    const { prompt } = req.body;
 
-    if (!prompt || typeof prompt !== "string") {
-      return res.status(400).json({ error: "Prompt is required and must be a string" });
-    }
-
-    const cleanPrompt = prompt.trim();
-    const params = new URLSearchParams({
-      width: "1024",
-      height: "1024",
-      nologo: "true",
-      enhance: "true",
-      seed: String(Date.now()),
-    });
-
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(
-      cleanPrompt
-    )}?${params.toString()}`;
-
-    // Fetch the image from Pollinations with proper headers to avoid rate limiting
-    const response = await fetch(imageUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'image/*',
-        'Referer': 'https://image.pollinations.ai/'
-      }
-    });
-
-    if (!response.ok) {
-      // If proxying fails, return the URL and let the frontend handle it
-      // This is a fallback for rate limiting or other issues
-      console.warn(`Pollinations API returned ${response.status}, falling back to direct URL`);
-      return res.json({ imageUrl });
-    }
-
-    // Get the image as a blob and set appropriate headers
-    const imageBuffer = await response.arrayBuffer();
-    const contentType = response.headers.get('content-type') || 'image/png';
-
-    res.set('Content-Type', contentType);
-    res.set('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
-    res.set('Content-Length', imageBuffer.length);
-    res.send(Buffer.from(imageBuffer));
-
-  } catch (error) {
-    console.error("Image generation error:", error);
-    res.status(500).json({ error: "Failed to generate image" });
-  }
-});
 
 // Start the Express server on the configured port
 app.listen(PORT, () => {

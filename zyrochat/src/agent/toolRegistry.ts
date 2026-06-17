@@ -1,5 +1,4 @@
 import { getWeather } from "../tools/weather";
-import { generateImage } from "../tools/image";
 import { executeMcpTool, getMcpToolDefinitions } from "./mcpClient";
 import type { AgentTool, AgentToolDefinition } from "./types";
 
@@ -123,40 +122,6 @@ const localTools: AgentTool[] = [
     // When the AI needs to calculate something, run this function
     async run(args) {
       return calculate(String(args.expression || ""));
-    },
-  },
-  {
-    definition: {
-      type: "function",
-      function: {
-        name: "generateImage",
-        description:
-          "Generate an image from a text prompt and return it as Markdown so it appears in the chat",
-        parameters: {
-          type: "object",
-          properties: {
-            prompt: {
-              type: "string",
-            },
-          },
-          required: ["prompt"],
-        },
-      },
-    },
-    async run(args) {
-      const prompt = String(args.prompt || "").trim();
-
-      if (!prompt) {
-        return "Please provide a prompt for the image you want to generate.";
-      }
-
-      try {
-        const imageUrl = await generateImage(prompt);
-        return `Generated image for: ${prompt}\n\n![Generated image](${imageUrl})\n\n[Open full image](${imageUrl})`;
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to generate image';
-        return `Error generating image: ${errorMessage}`;
-      }
     },
   },
 ];
