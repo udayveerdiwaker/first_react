@@ -9,17 +9,17 @@ const BACKEND_CHAT_URL = `${
   "http://localhost:5000"
 }/api/openrouter/chat`;
 
-// The AI model we are using (fast and capable GPT-4o-mini)
-const OPENROUTER_MODEL = "openai/gpt-4o-mini";
+// The AI model we are using (automatic high-quality free model)
+const OPENROUTER_MODEL = "openrouter/free";
 
 // Limit the context history sent to the AI to save tokens and response time
 const MAX_CONTEXT_MESSAGES = 10;
 
 // Token limit for deciding whether the AI needs to call a tool
-const TOOL_DECISION_MAX_TOKENS = 300;
+const TOOL_DECISION_MAX_TOKENS = 50;
 
 // Maximum token size for the full chat response
-const CHAT_MAX_TOKENS = 1200;
+const CHAT_MAX_TOKENS = 120;
 
 /**
  * Helper function to extract and format error messages from HTTP responses
@@ -164,10 +164,19 @@ export async function runSmartAgentStream(
   signal: AbortSignal
 ) {
   try {
-    // 1. Check if the AI wants to execute an MCP tool first
-    const message = await requestToolDecision(userInput, chat, mode, signal);
+    // Heuristic check: only request tool decision if the input has tool keywords
+    const hasToolKeywords = /weather|temp|aqi|pollut|air|news|headlin|time|date|calc|math|eval|expr|locat|ip/i.test(userInput);
+    
+    let message = null;
+    if (hasToolKeywords) {
+      try {
+        message = await requestToolDecision(userInput, chat, mode, signal);
+      } catch (err) {
+        console.warn("Tool decision check failed, falling back to direct response:", err);
+      }
+    }
 
-    if (message.tool_calls?.length) {
+    if (message?.tool_calls?.length) {
       // Get first tool call information
       const toolCall = message.tool_calls[0];
       const args = JSON.parse(toolCall.function.arguments || "{}");

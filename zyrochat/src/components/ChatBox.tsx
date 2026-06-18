@@ -988,11 +988,21 @@ export default function ChatBox({
                       ) : (
                         <>
                           {msg.loading ? (
-                            <div className="flex items-center gap-3">
-                              <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500" />
-                              <span className="text-[12px] text-slate-500 dark:text-slate-400">
-                                Generating response...
-                              </span>
+                            <div className="flex flex-col gap-3 py-2.5 max-w-2xl">
+                              <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-bounce [animation-delay:-0.3s]" />
+                                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-bounce [animation-delay:-0.15s]" />
+                                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-bounce" />
+                                </div>
+                                <span className="text-[11px] font-semibold tracking-wider text-emerald-600 dark:text-emerald-400 uppercase">
+                                  Formulating response...
+                                </span>
+                              </div>
+                              <div className="space-y-2.5">
+                                <div className="h-3 w-[85%] rounded-full animate-shimmer" />
+                                <div className="h-3 w-[65%] rounded-full animate-shimmer" />
+                              </div>
                             </div>
                           ) : msg.error ? (
                             <p className="text-[12px]">{msg.text}</p>
@@ -1005,7 +1015,10 @@ export default function ChatBox({
                               }
                             >
                               {msg.role === "bot" ? (
-                                <MarkdownRenderer text={msg.text} />
+                                <MarkdownRenderer
+                                  text={msg.text}
+                                  isStreaming={idx === chat.length - 1 && loading}
+                                />
                               ) : (
                                 <p className="whitespace-pre-wrap text-[13px] leading-6 sm:text-[14px]">
                                   {msg.text}

@@ -11,17 +11,21 @@ const CodeBlockCopy = React.memo(
   ({ code, language }: { code: string; language: string }) => {
     const [copied, setCopied] = useState(false);
 
+    // Check if code ends with streaming cursor
+    const hasCursor = code.endsWith("||STREAMING_CURSOR||");
+    const cleanCode = hasCursor ? code.slice(0, -20) : code;
+
     // Copies the code text to the user's clipboard.
     // After a successful copy, it briefly changes the button label to "Copied".
     const handleCopy = useCallback(async () => {
       try {
-        await navigator.clipboard.writeText(code);
+        await navigator.clipboard.writeText(cleanCode);
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       } catch (err) {
         console.error("Copy failed:", err);
       }
-    }, [code]);
+    }, [cleanCode]);
 
     return (
       <div className="group my-4 overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-950 shadow-[0_16px_45px_-30px_rgba(15,23,42,0.9)] dark:border-slate-800">
@@ -31,6 +35,12 @@ const CodeBlockCopy = React.memo(
             <span className="h-2 w-2 rounded-full bg-slate-600" />
             <span className="h-2 w-2 rounded-full bg-slate-600" />
             <span className="ml-2">{language}</span>
+            {hasCursor && (
+              <span className="ml-2.5 flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                <span className="text-[9px] text-emerald-400 font-bold tracking-widest uppercase">Streaming...</span>
+              </span>
+            )}
           </div>
 
           <button
@@ -64,7 +74,7 @@ const CodeBlockCopy = React.memo(
             lineHeight: "1.55",
           }}
         >
-          {code}
+          {cleanCode}
         </SyntaxHighlighter>
       </div>
     );
@@ -111,10 +121,50 @@ const MarkdownImage = React.memo(
 
 MarkdownImage.displayName = "MarkdownImage";
 
+// Helper to recursively inject the animated typing cursor at the end of the children stream
+const renderWithCursor = (content: React.ReactNode): React.ReactNode => {
+  if (typeof content === "string") {
+    if (content.endsWith("||STREAMING_CURSOR||")) {
+      const mainText = content.substring(0, content.length - 20); // remove "||STREAMING_CURSOR||"
+      return (
+        <>
+          {mainText}
+          <span className="streaming-cursor" />
+        </>
+      );
+    }
+    return content;
+  }
+
+  if (Array.isArray(content)) {
+    return content.map((child, index) => {
+      // Only process the last child of the array to inject cursor at the very end
+      if (index === content.length - 1) {
+        return renderWithCursor(child);
+      }
+      return child;
+    });
+  }
+
+  if (React.isValidElement(content)) {
+    const element = content as React.ReactElement<any>;
+    if (element.props && element.props.children) {
+      return React.cloneElement(element, {
+        ...element.props,
+        children: renderWithCursor(element.props.children),
+      });
+    }
+  }
+
+  return content;
+};
+
 // Converts assistant markdown text into styled React elements.
 // It supports GitHub-style markdown, syntax-highlighted code blocks, tables,
 // links, lists, headings, and other common response formatting.
-const MarkdownRenderer = React.memo(({ text }: { text: string }) => {
+const MarkdownRenderer = React.memo(({ text, isStreaming }: { text: string; isStreaming?: boolean }) => {
+  const textToRender = isStreaming ? `${text}||STREAMING_CURSOR||` : text;
+
   return (
     <div className="markdown-output min-w-0">
       <ReactMarkdown
@@ -127,7 +177,7 @@ const MarkdownRenderer = React.memo(({ text }: { text: string }) => {
             if (inline) {
               return (
                 <code className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[0.9em] text-fuchsia-700 dark:bg-slate-800 dark:text-fuchsia-300">
-                  {children}
+                  {renderWithCursor(children)}
                 </code>
               );
             }
@@ -142,25 +192,25 @@ const MarkdownRenderer = React.memo(({ text }: { text: string }) => {
           // Renders level-one headings from markdown.
           h1: ({ children }) => (
             <h1 className="mb-3 mt-5 text-lg font-semibold tracking-tight text-slate-900 dark:text-white sm:text-xl">
-              {children}
+              {renderWithCursor(children)}
             </h1>
           ),
           // Renders level-two headings from markdown.
           h2: ({ children }) => (
             <h2 className="mb-2 mt-4 text-base font-semibold tracking-tight text-slate-900 dark:text-white sm:text-lg">
-              {children}
+              {renderWithCursor(children)}
             </h2>
           ),
           // Renders level-three headings from markdown.
           h3: ({ children }) => (
             <h3 className="mb-2 mt-4 text-[15px] font-semibold text-slate-800 dark:text-slate-100">
-              {children}
+              {renderWithCursor(children)}
             </h3>
           ),
           // Renders normal paragraphs from markdown.
           p: ({ children }) => (
             <p className="mb-3 text-[14px] leading-6 text-slate-700 dark:text-slate-300 sm:text-[15px]">
-              {children}
+              {renderWithCursor(children)}
             </p>
           ),
           // Renders unordered bullet lists from markdown.
@@ -176,17 +226,17 @@ const MarkdownRenderer = React.memo(({ text }: { text: string }) => {
             </ol>
           ),
           // Renders each list item with consistent line height.
-          li: ({ children }) => <li className="leading-6">{children}</li>,
+          li: ({ children }) => <li className="leading-6">{renderWithCursor(children)}</li>,
           // Renders quoted markdown text with a left border.
           blockquote: ({ children }) => (
             <blockquote className="my-4 rounded-r-2xl border-l-2 border-slate-300 bg-slate-50/80 py-2 pl-4 italic text-slate-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
-              {children}
+              {renderWithCursor(children)}
             </blockquote>
           ),
           // Renders bold markdown text.
           strong: ({ children }) => (
             <strong className="font-semibold text-slate-900 dark:text-white">
-              {children}
+              {renderWithCursor(children)}
             </strong>
           ),
           // Renders horizontal divider lines.
@@ -216,7 +266,7 @@ const MarkdownRenderer = React.memo(({ text }: { text: string }) => {
           // Renders table body cells.
           td: ({ children }) => (
             <td className="whitespace-pre-wrap border-b border-slate-100 px-3 py-2 align-top text-slate-600 dark:border-slate-800 dark:text-slate-300">
-              {children}
+              {renderWithCursor(children)}
             </td>
           ),
           // Renders table rows with alternating background colors.
@@ -233,7 +283,7 @@ const MarkdownRenderer = React.memo(({ text }: { text: string }) => {
               rel="noreferrer"
               className="text-blue-600 underline underline-offset-2 transition hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
             >
-              {children}
+              {renderWithCursor(children)}
             </a>
           ),
           // Renders generated images and other markdown images inside chat replies.
@@ -242,7 +292,7 @@ const MarkdownRenderer = React.memo(({ text }: { text: string }) => {
           ),
         }}
       >
-        {text}
+        {textToRender}
       </ReactMarkdown>
     </div>
   );
