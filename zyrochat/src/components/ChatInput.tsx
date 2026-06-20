@@ -355,15 +355,13 @@ export default function ChatInput({
         )}
 
         <div
-          className={`relative overflow-hidden rounded-[28px] border bg-white/96 shadow-[0_24px_70px_-48px_rgba(15,23,42,0.45)] transition-all duration-200 dark:bg-slate-900/96 ${
-            centered
+          className={`relative overflow-hidden rounded-[28px] border bg-white/96 shadow-[0_24px_70px_-48px_rgba(15,23,42,0.45)] transition-all duration-200 dark:bg-slate-900/96 ${centered
               ? "border-slate-200/90 dark:border-slate-700/80"
               : "border-slate-200/80 dark:border-slate-700/80"
-          } ${
-            expanded
+            } ${expanded
               ? "ring-2 ring-slate-200 dark:ring-slate-700"
               : "focus-within:border-slate-300 dark:focus-within:border-slate-600"
-          }`}
+            }`}
         >
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-300/80 to-transparent dark:via-slate-600/80" />
 
@@ -375,11 +373,10 @@ export default function ChatInput({
               placeholder="Message ZyroChat"
               rows={1}
               disabled={interactionLocked}
-              className={`min-h-9 flex-1 resize-none overflow-y-auto bg-transparent px-1 py-2 text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500 sm:py-1 ${
-                centered
+              className={`min-h-9 flex-1 resize-none overflow-y-auto bg-transparent px-1 py-2 text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500 sm:py-1 ${centered
                   ? "max-h-40 text-[14px] leading-6 sm:text-[15px]"
                   : "max-h-32 text-[13px] leading-6 sm:text-[14px]"
-              }`}
+                }`}
               onKeyDown={(e) => {
                 // Enter sends the message, while Shift+Enter keeps the normal
                 // textarea behavior and adds a new line.
@@ -394,17 +391,16 @@ export default function ChatInput({
               type="button"
               onClick={toggleSpeechInput}
               disabled={interactionLocked || !speechSupported}
-              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition-all duration-200 active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 sm:h-10 sm:w-10 ${
-                listening
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition-all duration-200 active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 sm:h-10 sm:w-10 ${listening
                   ? "border-red-200 bg-red-50 text-red-600 shadow-[0_0_0_4px_rgba(248,113,113,0.14)] hover:bg-red-100 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300"
                   : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:bg-white hover:text-slate-950 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-700 dark:hover:text-white"
-              }`}
+                }`}
               title={
                 !speechSupported
                   ? "Voice input is not supported in this browser"
                   : listening
-                  ? "Stop voice input"
-                  : "Start voice input"
+                    ? "Stop voice input"
+                    : "Start voice input"
               }
               aria-label={listening ? "Stop voice input" : "Start voice input"}
             >
@@ -424,17 +420,16 @@ export default function ChatInput({
                 }
               }}
               disabled={!loading && (interactionLocked || !input.trim())}
-              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-all duration-200 active:scale-95 sm:h-10 sm:w-10 ${
-                loading
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-all duration-200 active:scale-95 sm:h-10 sm:w-10 ${loading
                   ? "bg-red-600 text-white shadow-[0_0_12px_rgba(239,68,68,0.45)] hover:scale-105 hover:bg-red-500 animate-pulse"
                   : "bg-slate-900 text-white shadow-md hover:scale-105 hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:hover:scale-100 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:disabled:bg-slate-700 dark:disabled:text-slate-500"
-              }`}
+                }`}
               title={
                 loading
                   ? "Stop generating"
                   : interactionLocked
-                  ? "Wait for the current response to finish"
-                  : "Send message (Shift+Enter for new line)"
+                    ? "Wait for the current response to finish"
+                    : "Send message (Shift+Enter for new line)"
               }
             >
               {loading ? (
