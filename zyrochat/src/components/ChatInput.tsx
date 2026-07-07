@@ -420,10 +420,11 @@ export default function ChatInput({
                 }
               }}
               disabled={!loading && (interactionLocked || !input.trim())}
-              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-all duration-200 active:scale-95 sm:h-10 sm:w-10 ${loading
-                  ? "bg-red-600 text-white shadow-[0_0_12px_rgba(239,68,68,0.45)] hover:scale-105 hover:bg-red-500 animate-pulse"
-                  : "bg-slate-900 text-white shadow-md hover:scale-105 hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:hover:scale-100 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:disabled:bg-slate-700 dark:disabled:text-slate-500"
-                }`}
+              className={`group flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-all duration-300 active:scale-95 sm:h-10 sm:w-10 ${
+                loading
+                  ? "bg-rose-600 text-white shadow-[0_0_12px_rgba(239,68,68,0.45)] hover:scale-105 hover:bg-rose-500 animate-pulse"
+                  : "bg-sky-500 text-white shadow-[0_4px_12px_rgba(14,165,233,0.3)] hover:scale-105 hover:bg-sky-600 hover:shadow-[0_6px_20px_rgba(14,165,233,0.45)] disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none dark:bg-sky-400 dark:text-slate-950 dark:hover:bg-sky-300 dark:disabled:bg-slate-800 dark:disabled:text-slate-600"
+              }`}
               title={
                 loading
                   ? "Stop generating"
@@ -433,9 +434,17 @@ export default function ChatInput({
               }
             >
               {loading ? (
-                <Square size={16} fill="currentColor" className="sm:size-[15px]" />
+                <Square
+                  size={16}
+                  fill="currentColor"
+                  className="transition-transform duration-300 group-hover:scale-90 sm:size-[15px]"
+                />
               ) : (
-                <ArrowUp size={18} strokeWidth={2.5} className="sm:size-[18px]" />
+                <ArrowUp
+                  size={18}
+                  strokeWidth={2.5}
+                  className="transition-transform duration-300 group-hover:-translate-y-0.75 sm:size-[18px]"
+                />
               )}
             </button>
           </div>
