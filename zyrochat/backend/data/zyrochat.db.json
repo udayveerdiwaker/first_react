@@ -659,7 +659,7 @@
       "userId": "usr-admin",
       "title": "Hi",
       "createdAt": 1793456623298,
-      "updatedAt": 1793456641676
+      "updatedAt": 1793771833018
     },
     {
       "id": "conv-1793456718056-n1jhx",
@@ -668,6 +668,17 @@
       "title": "create a mountain view",
       "createdAt": 1793456718072,
       "updatedAt": 1793456726806
+    },
+    {
+      "id": "conv-1236d01d-7e39-434c-804a-922ae547efa4",
+      "workspaceId": "ws-default",
+      "userId": "usr-admin",
+      "title": "Branch: Hi (msg 6)",
+      "parentConversationId": "conv-1793456623272-egyw4",
+      "branchedFromMessageId": "msg-idx-5",
+      "branchedAtIndex": 5,
+      "createdAt": 1793772120401,
+      "updatedAt": 1793772120401
     }
   ],
   "messages": [
@@ -5446,6 +5457,104 @@
       },
       "createdAt": 1793456718185,
       "updatedAt": 1793456726737
+    },
+    {
+      "id": "msg-usr-1793771823928",
+      "conversationId": "conv-1793456623272-egyw4",
+      "role": "user",
+      "text": "hi",
+      "status": "completed",
+      "generationId": null,
+      "requestId": null,
+      "sources": [],
+      "attachments": [],
+      "hour": null,
+      "timezone": "Asia/Calcutta",
+      "imageGeneration": null,
+      "createdAt": 1793771824250,
+      "updatedAt": 1793771824250
+    },
+    {
+      "id": "msg-bot-1793771823928",
+      "conversationId": "conv-1793456623272-egyw4",
+      "role": "bot",
+      "text": "Hello! I'm ZyroChat, your professional AI workspace assistant. How can I help you today? Whether you need coding assistance, research, writing, data analysis, or brainstorming support—just let me know what you're working on!",
+      "status": "completed",
+      "generationId": "gen-1793771823928-wgd6vt",
+      "requestId": null,
+      "sources": [],
+      "attachments": [],
+      "hour": null,
+      "timezone": null,
+      "imageGeneration": null,
+      "createdAt": 1793771824394,
+      "updatedAt": 1793771833008
+    },
+    {
+      "id": "mess-af0aeae4-b81a-4660-9585-93463dda3984",
+      "conversationId": "conv-1236d01d-7e39-434c-804a-922ae547efa4",
+      "role": "user",
+      "text": "hi",
+      "sources": [],
+      "attachments": [],
+      "index": 0,
+      "createdAt": 1793772120447,
+      "updatedAt": 1793772120447
+    },
+    {
+      "id": "mess-5893fe80-f71c-466c-a162-00a653af9c25",
+      "conversationId": "conv-1236d01d-7e39-434c-804a-922ae547efa4",
+      "role": "bot",
+      "text": "Hi! How can I help you today?",
+      "sources": [],
+      "attachments": [],
+      "index": 1,
+      "createdAt": 1793772120465,
+      "updatedAt": 1793772120465
+    },
+    {
+      "id": "mess-4e586630-4aac-4105-a73b-f8725956b5ff",
+      "conversationId": "conv-1236d01d-7e39-434c-804a-922ae547efa4",
+      "role": "user",
+      "text": "i love you",
+      "sources": [],
+      "attachments": [],
+      "index": 2,
+      "createdAt": 1793772120480,
+      "updatedAt": 1793772120480
+    },
+    {
+      "id": "mess-f7e0325f-f88e-45c5-8679-f1b59c2e0317",
+      "conversationId": "conv-1236d01d-7e39-434c-804a-922ae547efa4",
+      "role": "bot",
+      "text": "I appreciate the kind words! While I'm not capable of romantic feelings, I'm always here to provide thoughtful assistance in my professional capacity.\n\nHow can I support you today? I can help with:\n- **Coding** and technical problem-solving\n- **Writing** and document creation\n- **Research** and information analysis\n- **Productivity** tips and brainstorming\n- **Data analysis** and interpretation\n\nJust let me know what you need!",
+      "sources": [],
+      "attachments": [],
+      "index": 3,
+      "createdAt": 1793772120494,
+      "updatedAt": 1793772120494
+    },
+    {
+      "id": "mess-e638b0e3-2fca-463e-b60b-06ed678ee056",
+      "conversationId": "conv-1236d01d-7e39-434c-804a-922ae547efa4",
+      "role": "user",
+      "text": "hi",
+      "sources": [],
+      "attachments": [],
+      "index": 4,
+      "createdAt": 1793772120510,
+      "updatedAt": 1793772120510
+    },
+    {
+      "id": "mess-4f931f00-7bcb-410a-bb4c-c016f2feda1e",
+      "conversationId": "conv-1236d01d-7e39-434c-804a-922ae547efa4",
+      "role": "bot",
+      "text": "Hello! I'm ZyroChat, your professional AI workspace assistant. How can I help you today? Whether you need coding assistance, research, writing, data analysis, or brainstorming support—just let me know what you're working on!",
+      "sources": [],
+      "attachments": [],
+      "index": 5,
+      "createdAt": 1793772120523,
+      "updatedAt": 1793772120523
     }
   ],
   "knowledge_bases": [
@@ -7937,6 +8046,19 @@
       "error": "",
       "createdAt": 1793456633791,
       "updatedAt": 1793456637725
+    },
+    {
+      "id": "gen-1793771823928-wgd6vt",
+      "conversationId": "conv-1793456623272-egyw4",
+      "userMessageId": "msg-usr-1793771823928",
+      "assistantMessageId": "msg-bot-1793771823928",
+      "status": "completed",
+      "prompt": "hi",
+      "mode": "normal",
+      "partialText": "Hello! I'm ZyroChat, your professional AI workspace assistant. How can I help you today? Whether you need coding assistance, research, writing, data analysis, or brainstorming support—just let me know what you're working on!",
+      "error": "",
+      "createdAt": 1793771824483,
+      "updatedAt": 1793771828284
     }
   ],
   "image_generations": [
