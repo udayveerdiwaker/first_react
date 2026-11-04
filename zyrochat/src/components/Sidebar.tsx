@@ -32,7 +32,7 @@ import {
   Link2,
   Shield,
 } from "lucide-react";
-import { saveChats } from "../store/chatStore";
+import { saveChats, clearAllConversationsFromServer, clearConversationDraft } from "../store/chatStore";
 import {
   getProjects,
   saveProjects,
@@ -174,6 +174,8 @@ export default function Sidebar({
     saveChats([]);
     setChat([]);
     setChatIndex(null);
+    clearConversationDraft();
+    clearAllConversationsFromServer().catch(() => {});
   };
 
 function highlightMatch(text: string, query: string) {

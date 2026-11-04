@@ -83,6 +83,7 @@ export default function SettingsModal({
   const [backendDetails, setBackendDetails] = useState<any>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [clearSuccess, setClearSuccess] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -1164,6 +1165,12 @@ export default function SettingsModal({
           {activeTab === "data" && (
             <div className="space-y-4">
               {/* Feedback banners */}
+              {clearSuccess && (
+                <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-xs text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 size={15} className="shrink-0" />
+                  <span>{clearSuccess}</span>
+                </div>
+              )}
               {importSuccess && (
                 <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-xs text-emerald-600 dark:text-emerald-400">
                   <CheckCircle2 size={15} className="shrink-0" />
@@ -1252,7 +1259,8 @@ export default function SettingsModal({
                         onClick={() => {
                           onClearAllChats();
                           setConfirmClear(false);
-                          onClose();
+                          setClearSuccess("All conversations have been cleared.");
+                          setTimeout(() => setClearSuccess(null), 4000);
                         }}
                         className="rounded-lg bg-red-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-red-700 cursor-pointer"
                       >
@@ -1269,11 +1277,12 @@ export default function SettingsModal({
                   ) : (
                     <button
                       type="button"
+                      disabled={chatsCount === 0}
                       onClick={() => setConfirmClear(true)}
-                      className="flex items-center gap-1 rounded-xl border border-red-200 bg-red-50/80 px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-400 cursor-pointer"
+                      className="flex items-center gap-1 rounded-xl border border-red-200 bg-red-50/80 px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100 disabled:opacity-40 disabled:cursor-not-allowed dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-400 cursor-pointer"
                     >
                       <Trash2 size={13} />
-                      <span>Clear All</span>
+                      <span>{chatsCount === 0 ? "Cleared" : "Clear All"}</span>
                     </button>
                   )}
                 </div>

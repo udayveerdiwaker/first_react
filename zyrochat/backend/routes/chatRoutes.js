@@ -127,6 +127,35 @@ router.post("/conversations", (req, res) => {
 });
 
 /**
+ * DELETE /api/chat/conversations
+ * Clears all conversations and messages for the user
+ */
+router.delete("/conversations", (req, res) => {
+  const userId = req.user?.id;
+  const conversations = userId
+    ? db.table("conversations").find({ userId })
+    : db.table("conversations").find({});
+
+  conversations.forEach((conv) => {
+    // Cancel active generation
+    const activeGen = generationManager.getActiveForConversation(conv.id);
+    if (activeGen) {
+      generationManager.cancelGeneration(activeGen.id);
+    }
+    // Delete messages
+    const msgs = db.table("messages").find({ conversationId: conv.id });
+    msgs.forEach((m) => db.table("messages").delete(m.id));
+    // Delete generations
+    const gens = db.table("generations").find({ conversationId: conv.id });
+    gens.forEach((g) => db.table("generations").delete(g.id));
+    // Delete conversation
+    db.table("conversations").delete(conv.id);
+  });
+
+  res.json({ success: true, message: "All conversations and messages deleted successfully" });
+});
+
+/**
  * DELETE /api/chat/conversations/:id
  * Deletes a conversation and its messages
  */

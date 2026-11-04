@@ -300,3 +300,18 @@ export async function fetchConversationsFromServer(): Promise<any[]> {
     return getChats();
   }
 }
+
+/**
+ * Clears all conversations from server database
+ */
+export async function clearAllConversationsFromServer(): Promise<boolean> {
+  try {
+    const res = await fetch(`${BACKEND_BASE}/api/chat/conversations`, {
+      method: "DELETE",
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
