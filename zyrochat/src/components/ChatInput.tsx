@@ -592,61 +592,90 @@ export default function ChatInput({
                       </button>
 
                       <button
+                        type="button"
                         onClick={() => {
-                          if (loading) {
-                            onStop?.();
-                          } else if (!interactionLocked && input.trim()) {
-                            onSend();
-                          }
+                          document.getElementById("file-upload-camera")?.click();
                         }}
-                        disabled={!loading && (interactionLocked || !input.trim())}
-                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-all duration-200 active:scale-95 sm:h-10 sm:w-10 ${loading
-                          ? "bg-red-600 text-white shadow-[0_0_12px_rgba(239,68,68,0.45)] hover:scale-105 hover:bg-red-500 animate-pulse"
-                          : "bg-slate-900 text-white shadow-md hover:scale-105 hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:hover:scale-100 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:disabled:bg-slate-700 dark:disabled:text-slate-500"
-                          }`}
-                        title={
-                          loading
-                            ? "Stop generating"
-                            : interactionLocked
-                              ? "Wait for the current response to finish"
-                              : "Send message (Shift+Enter for new line)"
-                        }
+                        className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-[#171b26] cursor-pointer"
                       >
-                        {loading ? (
-                          <Square size={16} fill="currentColor" className="sm:size-[15px]" />
-                        ) : (
-                          <ArrowUp size={18} strokeWidth={2.5} className="sm:size-[18px]" />
-                        )}
+                        <Camera size={14} className="text-slate-400" />
+                        <span>Take photo</span>
                       </button>
-                    </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
-          {/* {centered && (
-            <div className="flex flex-wrap gap-2 px-4 pb-3">
-              {quickPrompts.map((prompt) => (
-                <button
-                  key={prompt}
-                  type="button"
-                  onClick={() => {
-                    setInput(prompt);
-                    onQuickPrompt?.(prompt);
-                  }}
-                  className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] text-slate-600 transition hover:border-slate-300 hover:bg-white hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-white"
-                >
-                  {prompt}
-                </button>
-              ))}
+              {/* Voice Input Button */}
+              <button
+                type="button"
+                onClick={() => setVoicePanelOpen(true)}
+                disabled={interactionLocked}
+                className={`flex h-8 w-8 items-center justify-center rounded-xl border transition-all cursor-pointer ${
+                  voicePanelOpen
+                    ? "border-red-500 bg-red-500/10 text-red-500"
+                    : "border-slate-200/80 bg-slate-50 text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:border-slate-800 dark:bg-[#151924] dark:text-slate-400 dark:hover:border-slate-700 dark:hover:text-slate-200"
+                }`}
+                title="Voice input"
+                aria-label="Voice input"
+              >
+                <Mic size={15} />
+              </button>
+
+              {/* Send / Stop Action Button */}
+              <button
+                type={loading ? "button" : "submit"}
+                onClick={() => {
+                  if (loading) {
+                    onStop?.();
+                  }
+                }}
+                disabled={
+                  loading
+                    ? false
+                    : interactionLocked ||
+                      (!input.trim() && attachedFiles.length === 0)
+                }
+                className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all duration-200 active:scale-95 cursor-pointer ${
+                  loading
+                    ? "bg-red-500 text-white shadow-md shadow-red-500/30 hover:bg-red-600 animate-pulse"
+                    : imageMode
+                    ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/25 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed"
+                    : "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md shadow-cyan-500/25 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed"
+                }`}
+                title={
+                  loading
+                    ? "Stop generating"
+                    : imageMode
+                    ? "Generate Image"
+                    : "Send message (Enter)"
+                }
+                aria-label={
+                  loading
+                    ? "Stop generating"
+                    : imageMode
+                    ? "Generate Image"
+                    : "Send message"
+                }
+              >
+                {loading ? (
+                  <Square size={13} fill="currentColor" />
+                ) : (
+                  <ArrowUp size={15} strokeWidth={2.5} />
+                )}
+              </button>
             </div>
           </div>
 
           {/* Bottom helper row */}
-                  <div className="flex items-center justify-between border-t border-slate-100/80 px-3.5 py-1.5 text-[10px] text-slate-400 dark:border-slate-800/60 dark:text-slate-500 select-none font-normal">
-                    <span>Shift + Enter for new line</span>
-                    <span className="hidden xs:inline">
-                      ZyroChat AI Workspace • Fast & Reliable
-                    </span>
-                  </div>
-                </form>
-              </div>
-            </div>
-            );
+          <div className="flex items-center justify-between border-t border-slate-100/80 px-3.5 py-1.5 text-[10px] text-slate-400 dark:border-slate-800/60 dark:text-slate-500 select-none font-normal">
+            <span>Shift + Enter for new line</span>
+            <span className="hidden xs:inline">
+              ZyroChat AI Workspace • Fast & Reliable
+            </span>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }
