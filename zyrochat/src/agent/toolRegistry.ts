@@ -40,7 +40,9 @@ ${now.toLocaleTimeString()}`;
  */
 function calculate(expression: string) {
   try {
-    return `Result: ${eval(expression)}`;
+    const sanitized = expression.replace(/[^0-9+\-*/().%\s^Math.sqrtincosalePIE]/g, "");
+    const result = Function(`"use strict"; return (${sanitized || expression})`)();
+    return `Result: ${result}`;
   } catch {
     return "Invalid calculation";
   }
@@ -122,6 +124,59 @@ const localTools: AgentTool[] = [
     // When the AI needs to calculate something, run this function
     async run(args) {
       return calculate(String(args.expression || ""));
+    },
+  },
+  {
+    definition: {
+      type: "function",
+      function: {
+        name: "generateImage",
+        description:
+          "Generate a high-quality, photographic, realistic or artistic image from a detailed visual prompt description",
+        parameters: {
+          type: "object",
+          properties: {
+            prompt: {
+              type: "string",
+              description: "The detailed visual prompt describing the scene, lighting, style and composition",
+            },
+            aspectRatio: {
+              type: "string",
+              enum: ["1:1", "16:9", "9:16", "4:3"],
+              description: "Aspect ratio of the generated image (default: '1:1')",
+            },
+          },
+          required: ["prompt"],
+        },
+      },
+    },
+    async run(args) {
+      const prompt = String(args.prompt || "");
+      const aspectRatio = String(args.aspectRatio || "1:1");
+      const backendUrl = (
+        (typeof import.meta !== "undefined" && import.meta.env?.VITE_BACKEND_URL) ||
+        "http://localhost:5000"
+      ).replace(/\/$/, "");
+
+      try {
+        const res = await fetch(`${backendUrl}/api/images/generate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt, aspectRatio }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => null);
+          return `Image generation failed: ${err?.error || res.statusText}`;
+        }
+        const data = await res.json();
+        const img = data?.imageGeneration;
+        if (!img?.imageUrl) {
+          return "Image generation succeeded but no URL was returned.";
+        }
+        return `Successfully generated image for prompt "${img.prompt}": ![${img.prompt}](${backendUrl}${img.imageUrl})`;
+      } catch (err: any) {
+        return `Image generation failed: ${err?.message || "network error"}`;
+      }
     },
   },
 ];

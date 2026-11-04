@@ -1,5 +1,5 @@
 /**
- * ZyroChat Backend Server
+ * AI Workspace Backend Server
  * 
  * This Express.js server provides:
  * 1. API proxy for OpenRouter (AI model provider)
@@ -16,6 +16,7 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require("path");
 const { OpenAI } = require("openai");
+const { executeWebSearch } = require("./searchService");
 
 // Load environment variables from the project root, then fill any backend-only values.
 dotenv.config({ path: path.join(__dirname, "..", ".env") });
@@ -34,7 +35,59 @@ const OPENROUTER_TITLE = "ZyroChat"; // Identifier sent to OpenRouter
 app.use(cors());
 
 // Parse incoming JSON requests
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+// Observability: Server-side request logger with sensitive data protection
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    if (req.path !== "/api/health" && req.path !== "/health") {
+      console.log(
+        `[${new Date().toISOString()}] ${req.method} ${req.path} -> ${res.statusCode} (${duration}ms)`
+      );
+    }
+  });
+  next();
+});
+
+// Import new modular routes and middlewares
+const db = require("./db");
+const { userContextMiddleware } = require("./middleware/auth");
+const { standardLimiter, aiChatLimiter, imageLimiter } = require("./middleware/rateLimiter");
+const modelRoutes = require("./routes/modelRoutes");
+const branchRoutes = require("./routes/branchRoutes");
+const knowledgeRoutes = require("./routes/knowledgeRoutes");
+const researchRoutes = require("./routes/researchRoutes");
+const workspaceRoutes = require("./routes/workspaceRoutes");
+const workflowRoutes = require("./routes/workflowRoutes");
+const connectorRoutes = require("./routes/connectorRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+const feedbackRoutes = require("./routes/feedbackRoutes");
+const artifactRoutes = require("./routes/artifactRoutes");
+const chatRoutes = require("./routes/chatRoutes");
+const imageRoutes = require("./routes/imageRoutes");
+const generationManager = require("./services/generationManager");
+const { handleApiError } = require("./utils/errorHandler");
+
+// Attach user context and standard rate limiting to /api endpoints
+app.use(userContextMiddleware);
+app.use("/api", standardLimiter);
+
+// Mount modular feature routes
+app.use("/api/chat", chatRoutes);
+app.use("/api/images", imageLimiter, imageRoutes);
+app.use("/api/models", modelRoutes);
+app.use("/api/conversations", branchRoutes);
+app.use("/api/knowledge-bases", knowledgeRoutes);
+app.use("/api/research", researchRoutes);
+app.use("/api/workspaces", workspaceRoutes);
+app.use("/api/workflows", workflowRoutes);
+app.use("/api/connectors", connectorRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/feedback", feedbackRoutes);
+app.use("/api/artifacts", artifactRoutes);
 
 // Initialize OpenAI client for title generation
 // (Uses OpenAI SDK even though we primarily use OpenRouter for chat)
@@ -97,18 +150,42 @@ ${now.toLocaleTimeString()}`;
 }
 
 /**
- * Safely calculates a math expression.
+ * Safely calculates a math expression without using arbitrary eval.
+ * Only permits valid arithmetic symbols and whitelisted Math methods.
+ * Prevents Remote Code Execution (RCE).
  * 
- * Wraps eval() in a try-catch to handle invalid expressions gracefully.
- * Warning: eval() can be unsafe, but here it's only used with AI-generated
- * expressions (not raw user input), so it's acceptable.
- * 
- * @param expression - Math expression to calculate (e.g., "2 + 2")
+ * @param expression - Math expression to calculate (e.g., "2 + 2", "Math.sqrt(144)")
  * @returns Result or error message
  */
 function calculate(expression) {
   try {
-    return `Result: ${eval(expression)}`;
+    if (!expression || typeof expression !== "string") {
+      return "Invalid calculation";
+    }
+
+    const expr = expression.trim();
+
+    // Security check: reject if contains any alphabetical character not in the whitelisted Math functions
+    const stripped = expr.replace(
+      /Math\.(sqrt|pow|abs|round|floor|ceil|sin|cos|tan|log|PI|E)/g,
+      ""
+    );
+    if (/[a-zA-Z_$]/.test(stripped)) {
+      return "Invalid calculation: Disallowed characters in expression";
+    }
+
+    // Replace power operator ^ with **
+    const sanitized = expr.replace(/\^/g, "**");
+
+    // Safe strict execution with Math as the only argument
+    const safeFn = new Function("Math", `"use strict"; return (${sanitized});`);
+    const result = safeFn(Math);
+
+    if (typeof result !== "number" || isNaN(result) || !isFinite(result)) {
+      return "Result: undefined or infinite";
+    }
+
+    return `Result: ${result}`;
   } catch {
     return "Invalid calculation";
   }
@@ -283,6 +360,25 @@ async function getIPLocation() {
 }
 
 /**
+ * Retrieves the user's public IP address.
+ * 
+ * Uses ipapi.co to fetch the connection IP address.
+ * 
+ * @returns IP Address formatted string (e.g., "IP Address: 8.8.8.8")
+ * @throws Error if retrieve fails
+ */
+async function getIP() {
+  const res = await fetch("https://ipapi.co/json/");
+  const data = await res.json();
+
+  if (!res.ok || !data?.ip) {
+    throw new Error("Unable to retrieve IP address");
+  }
+
+  return `IP Address: ${data.ip}`;
+}
+
+/**
  * Definition array of all MCP tools the backend can execute.
  * 
  * Each tool describes:
@@ -356,6 +452,29 @@ const mcpTools = [
       parameters: { type: "object", properties: {} },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "getIP",
+      description: "Get the user's public IP address",
+      parameters: { type: "object", properties: {} },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "webSearch",
+      description:
+        "Search the live web for current information, recent news, documentation, or facts",
+      parameters: {
+        type: "object",
+        properties: {
+          query: { type: "string", description: "Search query string" },
+        },
+        required: ["query"],
+      },
+    },
+  },
 ];
 
 /**
@@ -383,10 +502,32 @@ async function executeMcpTool(name, args = {}) {
       return getNews();
     case "getIPLocation":
       return getIPLocation();
+    case "getIP":
+      return getIP();
+    case "webSearch": {
+      const searchResult = await executeWebSearch(String(args.query || ""));
+      return searchResult.formatted;
+    }
     default:
       throw new Error(`Unknown MCP tool: ${name}`);
   }
 }
+
+/**
+ * POST /api/search
+ * 
+ * Direct web search endpoint for the frontend search toggle.
+ */
+app.post("/api/search", async (req, res) => {
+  try {
+    const { query } = req.body || {};
+    const data = await executeWebSearch(query);
+    res.json(data);
+  } catch (error) {
+    console.error("Search API error:", error);
+    res.status(500).json({ error: "Search failed", results: [] });
+  }
+});
 
 /**
  * GET /api/mcp/tools
@@ -451,81 +592,197 @@ app.post("/api/mcp/execute", async (req, res) => {
  * Response: Chat completion or streamed chunks
  */
 app.post("/api/openrouter/chat", async (req, res) => {
+  const {
+    generationId,
+    conversationId,
+    userMessageId,
+    assistantMessageId,
+    mode,
+    prompt,
+    promptText,
+  } = req.body || {};
+  const effectivePrompt = prompt || promptText || "";
+
+  // AbortController for upstream timeout and client disconnects
+  const abortController = new AbortController();
+  let clientDisconnected = false;
+
+  const timeoutId = setTimeout(() => {
+    abortController.abort(new Error("Upstream request timed out after 90 seconds"));
+  }, 90000);
+
+  // If a tracked generationId is provided, register with generationManager
+  if (generationId) {
+    generationManager.startGeneration({
+      generationId,
+      conversationId,
+      userMessageId,
+      assistantMessageId,
+      userId: req.user?.id,
+      prompt: effectivePrompt,
+      mode,
+      abortController,
+    });
+  }
+
+  // Detect client disconnection:
+  // If tracked with generationId, DO NOT abort upstream immediately — allow 60s grace period for page refresh recovery!
+  res.on("close", () => {
+    if (!res.writableEnded) {
+      clientDisconnected = true;
+      if (!generationId) {
+        abortController.abort(new Error("Client disconnected"));
+      }
+    }
+  });
+
   try {
     // Check that OpenRouter API key is configured
     if (!openRouterApiKey) {
+      clearTimeout(timeoutId);
       return res.status(500).json({ error: "OpenRouter API key not configured" });
     }
 
-    // Forward the request to OpenRouter API
+    // Default to a free OpenRouter model if none provided
+    const model = req.body?.model || process.env.VITE_MODEL || "openrouter/free";
+    const requestBody = {
+      ...req.body,
+      model,
+    };
+    // Strip our custom tracking fields before forwarding to OpenRouter
+    delete requestBody.generationId;
+    delete requestBody.conversationId;
+    delete requestBody.userMessageId;
+    delete requestBody.assistantMessageId;
+    delete requestBody.prompt;
+    delete requestBody.promptText;
+    delete requestBody.mode;
+    delete requestBody.hour;
+    delete requestBody.timezone;
+    delete requestBody.userId;
+    delete requestBody.requestId;
+
+    // Strict OpenAI/OpenRouter specification: NEVER pass prompt when messages array is present
+    if (Array.isArray(requestBody.messages)) {
+      delete requestBody.prompt;
+    }
+
+    // Forward the request to OpenRouter API with abort signal
     const providerResponse = await fetch(OPENROUTER_URL, {
       method: "POST",
+      signal: abortController.signal,
       headers: {
-        // Authorization header with API key
         Authorization: `Bearer ${openRouterApiKey}`,
-        // Tell OpenRouter where requests are coming from
         "HTTP-Referer": req.get("origin") || "http://localhost:5173",
-        // App identifier for OpenRouter tracking
         "X-OpenRouter-Title": OPENROUTER_TITLE,
         "Content-Type": "application/json",
       },
-      // Forward the original request body as-is
-      body: JSON.stringify(req.body),
+      body: JSON.stringify(requestBody),
     });
 
     // If OpenRouter returns an error, extract and return it
     if (!providerResponse.ok) {
+      clearTimeout(timeoutId);
       const message = await readProviderError(
         providerResponse,
         "OpenRouter request failed"
       );
+
+      if (generationId) {
+        generationManager.failGeneration(generationId, message);
+      }
 
       return res.status(providerResponse.status).json({
         error: message,
       });
     }
 
-    // 1. If the user's browser asked for streaming, we run this block
+    // 1. If streaming was requested
     if (req.body?.stream) {
-      // 2. Set headers to tell the browser that we are sending data continuously (SSE stream)
       res.status(providerResponse.status);
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
       res.setHeader("Connection", "keep-alive");
 
-      // 3. Get a reader to read the data chunks arriving from OpenRouter
       const reader = providerResponse.body.getReader();
+      const textDecoder = new TextDecoder();
+      let parseBuffer = "";
 
       try {
         while (true) {
-          // 4. Read the next chunk of raw bytes
           const { done, value } = await reader.read();
-          
-          // If the AI is done talking, stop the loop
           if (done) break;
 
-          // 5. Send the raw chunk directly to the browser
-          res.write(Buffer.from(value));
+          if (!clientDisconnected && !res.writableEnded) {
+            res.write(Buffer.from(value));
+          }
+
+          if (generationId && value) {
+            const chunkStr = textDecoder.decode(value, { stream: true });
+            parseBuffer += chunkStr;
+            const lines = parseBuffer.split("\n");
+            parseBuffer = lines.pop() ?? "";
+
+            for (const rawLine of lines) {
+              const line = rawLine.trim();
+              if (!line || line.startsWith(":")) continue;
+              if (line.startsWith("data:")) {
+                const jsonStr = line.replace("data:", "").trim();
+                if (jsonStr === "[DONE]") continue;
+                try {
+                  const parsed = JSON.parse(jsonStr);
+                  const content = parsed?.choices?.[0]?.delta?.content || "";
+                  if (content) {
+                    generationManager.appendChunk(generationId, content);
+                  }
+                } catch {}
+              }
+            }
+          }
+        }
+
+        if (generationId) {
+          generationManager.completeGeneration(generationId);
         }
       } catch (streamError) {
-        console.error("Error during streaming proxy:", streamError);
+        if (generationId) {
+          generationManager.failGeneration(generationId, streamError.message);
+        }
+        if (!clientDisconnected && !res.writableEnded) {
+          console.error("Error during streaming proxy:", streamError);
+        }
       } finally {
-        // 6. Make sure to unlock the reader when done
-        reader.releaseLock();
+        clearTimeout(timeoutId);
+        try {
+          reader.releaseLock();
+        } catch {}
       }
 
-      // 7. Tell the browser the stream is finished
-      return res.end();
+      if (!clientDisconnected && !res.writableEnded) {
+        return res.end();
+      }
+      return;
     }
 
+    clearTimeout(timeoutId);
     // For non-streaming requests, return the full response
     const data = await providerResponse.json();
     return res.status(providerResponse.status).json(data);
   } catch (error) {
-    console.error("OpenRouter proxy error:", error);
-    return res.status(500).json({
-      error: error.message || "OpenRouter request failed",
-    });
+    clearTimeout(timeoutId);
+    if (clientDisconnected || res.writableEnded) {
+      return; // Connection already closed by client
+    }
+    console.error("OpenRouter proxy error:", error.message || error);
+    if (!res.headersSent) {
+      return res.status(500).json({
+        error: error.name === "AbortError"
+          ? "Request timed out or cancelled"
+          : (error.message || "OpenRouter request failed"),
+      });
+    } else {
+      res.end();
+    }
   }
 });
 
@@ -584,10 +841,9 @@ app.post("/api/generate-title", async (req, res) => {
 
     res.json({ title });
   } catch (error) {
-    console.error("Title generation error:", error);
-
-    // Fallback: extract first few words from the prompt
-    const fallbackTitle = req.body.prompt
+    // Fallback: extract first few words safely from the prompt
+    const promptText = typeof req.body?.prompt === "string" ? req.body.prompt : "";
+    const fallbackTitle = promptText
       .split(/\s+/)
       .slice(0, 5)
       .join(" ")
@@ -599,27 +855,54 @@ app.post("/api/generate-title", async (req, res) => {
 });
 
 /**
- * GET /api/health
+ * GET /api/health and GET /health
  * 
- * Health check endpoint.
- * Used to verify the backend is running and what components are enabled.
- * 
- * Response shows:
- * - status: "ok" if server is running
- * - app: Application name ("ZyroChat")
- * - mcp: Whether MCP tools are enabled
+ * Health check endpoints for uptime and monitoring.
  */
-app.get("/api/health", (_req, res) => {
-  res.json({
+function getHealthPayload() {
+  return {
     status: "ok",
     app: "ZyroChat",
+    version: "2.5.0",
+    uptimeSeconds: Math.round(process.uptime()),
+    timestamp: new Date().toISOString(),
     mcp: "enabled",
+    webSearch: "enabled",
+  };
+}
+
+app.get("/api/health", (_req, res) => {
+  res.json(getHealthPayload());
+});
+
+app.get("/health", (_req, res) => {
+  res.json(getHealthPayload());
+});
+
+// Centralized Express 404 for unmatched /api routes
+app.use("/api", (req, res) => {
+  res.status(404).json({
+    success: false,
+    error: {
+      code: "NOT_FOUND",
+      message: `API endpoint ${req.originalUrl || req.baseUrl} not found`,
+      errorId: "err-404",
+    },
+    errorId: "err-404",
+    retryAllowed: false,
   });
 });
 
-
-
-// Start the Express server on the configured port
-app.listen(PORT, () => {
-  console.log(`ZyroChat backend running on http://localhost:${PORT}`);
+// Centralized Express unhandled error handler
+app.use((err, req, res, _next) => {
+  handleApiError(err, req, res, "express", "An unexpected server error occurred.");
 });
+
+// Start the Express server on the configured port if run directly
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`ZyroChat backend running on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;

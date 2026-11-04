@@ -20,6 +20,16 @@ export default defineConfig({
     tailwindcss(), // Processes Tailwind CSS and optimizes it
   ],
   server: {
+    watch: {
+      ignored: [
+        "**/backend/**",
+        "**/data/**",
+        "**/*.db.json*",
+        "**/*.tmp*",
+        "**/scratch/**",
+        "**/.git/**"
+      ]
+    },
     allowedHosts: [
       "riot-protector-operate.ngrok-free.dev"
     ]

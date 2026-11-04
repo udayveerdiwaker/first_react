@@ -1,52 +1,48 @@
-import { ArrowUp, Mic, MicOff, Square } from "lucide-react";
-import { useRef, useEffect, useState } from "react";
-import React from "react";
-
-type SpeechRecognitionConstructor = new () => SpeechRecognition;
-
-interface SpeechRecognition extends EventTarget {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  start: () => void;
-  stop: () => void;
-  abort: () => void;
-  onstart: (() => void) | null;
-  onresult: ((event: SpeechRecognitionEvent) => void) | null;
-  onend: (() => void) | null;
-  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
-}
-
-interface SpeechRecognitionEvent {
-  resultIndex: number;
-  results: SpeechRecognitionResultList;
-}
-
-interface SpeechRecognitionErrorEvent {
-  error: string;
-  message?: string;
-}
-
-declare global {
-  interface Window {
-    SpeechRecognition?: SpeechRecognitionConstructor;
-    webkitSpeechRecognition?: SpeechRecognitionConstructor;
-  }
-}
+import {
+  ArrowUp,
+  ArrowDown,
+  Mic,
+  Square,
+  Paperclip,
+  FileText,
+  X,
+  Laptop,
+  Code2,
+  Camera,
+  Image as ImageIcon,
+  Globe,
+  Sparkles,
+} from "lucide-react";
+import { useRef, useEffect, useState, useMemo } from "react";
+import type React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { processUploadedFile, FILE_QUICK_ACTIONS } from "../utils/fileExtractor";
+import type { ProcessedFile } from "../utils/fileExtractor";
+import VoiceInputPanel from "./VoiceInputPanel";
+import ModeSelector from "./dropdown";
+import HourSelector from "./HourSelector";
+import ImageGenerationToggle from "./ImageGenerationToggle";
+import type { AspectRatioOption } from "./ImageGenerationToggle";
 
 interface ChatInputProps {
   input: string;
   setInput: (value: string) => void;
-  onSend: () => void;
+  onSend: (overrideInput?: string, overrideFiles?: any[], hour?: string | null, timezone?: string) => void;
   onStop?: () => void;
   loading: boolean;
   interactionLocked?: boolean;
-  centered?: boolean;
+  webSearchEnabled?: boolean;
+  setWebSearchEnabled?: (enabled: boolean) => void;
+  mode?: string;
+  setMode?: (mode: string) => void;
+  onSendImage?: (prompt: string, options?: { aspectRatio?: AspectRatioOption }) => void;
+  externalPromptToEdit?: string | null;
+  onClearExternalPrompt?: () => void;
+  showScrollDown?: boolean;
+  onScrollToBottom?: () => void;
+  hasNewBelow?: boolean;
 }
 
-// Chat input component.
-// It lets the user type a message, send it, and use browser speech recognition
-// to turn microphone input into text when the browser supports it.
 export default function ChatInput({
   input,
   setInput,
@@ -54,400 +50,575 @@ export default function ChatInput({
   onStop,
   loading,
   interactionLocked = false,
-  centered = false,
+  webSearchEnabled = false,
+  setWebSearchEnabled,
+  mode,
+  setMode,
+  onSendImage,
+  externalPromptToEdit,
+  onClearExternalPrompt,
+  showScrollDown = false,
+  onScrollToBottom,
+  hasNewBelow = false,
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const speechBaseRef = useRef("");
-  const finalTranscriptRef = useRef("");
-  const speechStartingRef = useRef(false);
-  const speechErrorRef = useRef(false);
-  const speechStoppedByUserRef = useRef(false);
-  const [expanded, setExpanded] = useState(false);
-  const [listening, setListening] = useState(false);
-  const [speechSupported, setSpeechSupported] = useState(true);
-  const [speechStatus, setSpeechStatus] = useState("");
-  // const quickPrompts = [
-  //   "What's the weather like in New York today?",
-  //   "Give me a quick summary of the latest tech news.",
-  //   "Plan my day based on today's forecast.",
-  // ];
+  const attachmentMenuRef = useRef<HTMLDivElement>(null);
 
+  const [attachedFiles, setAttachedFiles] = useState<ProcessedFile[]>([]);
+  const [uploadMenuOpen, setUploadMenuOpen] = useState(false);
+  const [fileWarning, setFileWarning] = useState<string | null>(null);
+  const [isProcessingFiles, setIsProcessingFiles] = useState(false);
+  const [voicePanelOpen, setVoicePanelOpen] = useState(false);
+  const [selectedHour, setSelectedHour] = useState<string | null>(null);
+  const [imageMode, setImageMode] = useState(mode === "image");
+  const [imageAspectRatio, setImageAspectRatio] = useState<AspectRatioOption>("1:1");
+
+  // Sync mode with imageMode
   useEffect(() => {
-    // Keeps the typing box focused whenever the input value changes.
-    // This makes it easy to keep typing after actions like sending or speech input.
-    textareaRef.current?.focus();
+    if (mode === "image") {
+      setImageMode(true);
+    } else if (mode && mode !== "auto") {
+      setImageMode(false);
+    }
+  }, [mode]);
 
-    // When the input is programmatically cleared (e.g. after sending), collapse the height
-    if (input === "") {
-      const el = textareaRef.current;
-      if (el) {
-        el.style.height = "auto";
-        setExpanded(false);
+  // Sync external prompt when user chooses to edit an image prompt
+  useEffect(() => {
+    if (externalPromptToEdit) {
+      setInput(externalPromptToEdit);
+      setImageMode(true);
+      if (textareaRef.current) {
+        textareaRef.current.focus();
       }
+      onClearExternalPrompt?.();
+    }
+  }, [externalPromptToEdit, onClearExternalPrompt, setInput]);
+
+  const userTimezone = useMemo(() => {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    } catch {
+      return "UTC";
+    }
+  }, []);
+
+  // Resize textarea dynamically with max-height internal scroll & cursor preservation
+  useEffect(() => {
+    if (!textareaRef.current) return;
+    const start = textareaRef.current.selectionStart;
+    const end = textareaRef.current.selectionEnd;
+
+    textareaRef.current.style.height = "auto";
+    const scrollHeight = textareaRef.current.scrollHeight;
+    const maxHeight = 190;
+    const minHeight = 40;
+    const newHeight = Math.min(Math.max(scrollHeight, minHeight), maxHeight);
+
+    textareaRef.current.style.height = `${newHeight}px`;
+    textareaRef.current.style.overflowY = scrollHeight > maxHeight ? "auto" : "hidden";
+
+    if (document.activeElement === textareaRef.current && start !== null && end !== null) {
+      textareaRef.current.setSelectionRange(start, end);
     }
   }, [input]);
 
+  // Close upload menu on outside click
   useEffect(() => {
-    // Automatically focus the input textarea when the user starts typing anywhere on the page
-    const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      // 1. If interaction is locked (e.g. AI is loading), do not steal focus
-      if (interactionLocked) return;
-
-      // 2. Ignore if the user is already typing in another input or editable area
-      const activeEl = document.activeElement;
+    const handleClickOutside = (e: MouseEvent) => {
       if (
-        activeEl &&
-        (activeEl.tagName === "INPUT" ||
-          activeEl.tagName === "TEXTAREA" ||
-          activeEl.getAttribute("contenteditable") === "true")
+        attachmentMenuRef.current &&
+        !attachmentMenuRef.current.contains(e.target as Node)
       ) {
-        return;
-      }
-
-      // 3. Ignore system shortcuts and command keys (Ctrl, Alt, Meta/Cmd, Esc, Enter, Tab)
-      if (e.ctrlKey || e.altKey || e.metaKey || e.key === "Escape" || e.key === "Enter" || e.key === "Tab") {
-        return;
-      }
-
-      // 4. If a printable character (length is 1) is pressed, focus the chat textarea
-      if (e.key.length === 1) {
-        textareaRef.current?.focus();
+        setUploadMenuOpen(false);
       }
     };
-
-    window.addEventListener("keydown", handleGlobalKeyDown);
-    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
-  }, [interactionLocked]);
-
-  useEffect(() => {
-    // Checks whether the current browser has the Web Speech API.
-    // Chrome and Edge usually support it; unsupported browsers disable the mic.
-    const SpeechRecognitionApi =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    setSpeechSupported(Boolean(SpeechRecognitionApi));
-
-    return () => {
-      // Stops speech recognition if the component is removed from the screen.
-      // This prevents the microphone session from continuing in the background.
-      recognitionRef.current?.abort();
-    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Handles normal typing in the textarea.
-  // It updates the parent input state and grows the textarea height as text wraps.
-  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value;
-    setInput(newValue);
-    setSpeechStatus("");
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setIsProcessingFiles(true);
+      const filesArray = Array.from(e.target.files);
 
-    const el = textareaRef.current;
-    if (!el) return;
-
-    el.style.height = "auto";
-
-    const maxHeight = centered ? 160 : 128;
-
-    if (!newValue.trim()) {
-      setExpanded(false);
-    } else {
-      const isExpanded = el.scrollHeight > 88;
-      if (isExpanded !== expanded) {
-        setExpanded(isExpanded);
-      }
-    }
-
-    el.style.height =
-      el.scrollHeight <= maxHeight ? `${el.scrollHeight}px` : `${maxHeight}px`;
-  };
-
-  // Recalculates the textarea height after text is changed outside normal typing.
-  // Speech input uses this because the text is inserted programmatically.
-  const syncTextareaHeight = () => {
-    requestAnimationFrame(() => {
-      // Waits until React has placed the new text in the textarea,
-      // then measures the real scroll height and applies the matching height.
-      const el = textareaRef.current;
-      if (!el) return;
-
-      const maxHeight = centered ? 160 : 128;
-      el.style.height = "auto";
-      el.style.height =
-        el.scrollHeight <= maxHeight ? `${el.scrollHeight}px` : `${maxHeight}px`;
-      setExpanded(Boolean(el.value.trim()) && el.scrollHeight > 88);
-    });
-  };
-
-  const getSpeechRecognitionApi = () =>
-    window.SpeechRecognition || window.webkitSpeechRecognition;
-
-  const checkMicrophonePermission = async () => {
-    if (!navigator.mediaDevices?.getUserMedia) return true;
-
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    stream.getTracks().forEach((track) => track.stop());
-    return true;
-  };
-
-  // Starts or stops microphone-to-text input.
-  // When listening starts, it creates a browser speech recognizer and appends
-  // recognized words to the existing message text.
-  const toggleSpeechInput = async () => {
-    if (!speechSupported || interactionLocked || speechStartingRef.current) {
-      return;
-    }
-
-    if (listening) {
-      speechStoppedByUserRef.current = true;
-      recognitionRef.current?.stop();
-      setListening(false);
-      setSpeechStatus("Voice input stopped");
-      return;
-    }
-
-    const SpeechRecognitionApi = getSpeechRecognitionApi();
-
-    if (!SpeechRecognitionApi) {
-      setSpeechSupported(false);
-      setSpeechStatus("Voice input is not supported in this browser");
-      return;
-    }
-
-    speechStartingRef.current = true;
-    speechErrorRef.current = false;
-    speechStoppedByUserRef.current = false;
-    setSpeechStatus("Starting microphone...");
-
-    try {
-      await checkMicrophonePermission();
-    } catch (err: any) {
-      speechStartingRef.current = false;
-      setListening(false);
-
-      if (err?.name === "NotFoundError" || err?.name === "DevicesNotFoundError") {
-        setSpeechStatus("No microphone was found");
-      } else if (err?.name === "NotReadableError" || err?.name === "TrackStartError") {
-        setSpeechStatus("Microphone is already in use");
-      } else {
-        setSpeechStatus("Microphone permission was blocked");
-      }
-      return;
-    }
-
-    const recognition = new SpeechRecognitionApi();
-    speechBaseRef.current = input.trim();
-    finalTranscriptRef.current = "";
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = navigator.language || "en-US";
-
-    recognition.onstart = () => {
-      // The browser has successfully started listening to the microphone.
-      speechStartingRef.current = false;
-      setListening(true);
-      setSpeechStatus("Listening...");
-    };
-
-    recognition.onresult = (event) => {
-      // Speech recognition sends both final words and temporary guesses.
-      // Final words are stored, while interim words are shown live as the user speaks.
-      let interimTranscript = "";
-
-      for (let i = event.resultIndex; i < event.results.length; i += 1) {
-        const result = event.results[i];
-        const transcript = result[0].transcript;
-
-        if (result.isFinal) {
-          finalTranscriptRef.current += `${transcript} `;
+      // Check duplicates
+      const uniqueFiles: File[] = [];
+      let duplicateCount = 0;
+      for (const file of filesArray) {
+        const isDuplicate = attachedFiles.some(
+          (af) => af.name === file.name && af.size === file.size
+        );
+        if (isDuplicate) {
+          duplicateCount++;
         } else {
-          interimTranscript += transcript;
+          uniqueFiles.push(file);
         }
       }
 
-      const spokenText = `${finalTranscriptRef.current}${interimTranscript}`.trim();
-      const nextInput = [speechBaseRef.current, spokenText]
-        .filter(Boolean)
-        .join(" ");
-
-      setInput(nextInput);
-      setSpeechStatus(spokenText ? "Listening..." : "Say something");
-      syncTextareaHeight();
-    };
-
-    recognition.onerror = (event) => {
-      // Converts browser speech errors into simple messages the user can understand.
-      const messages: Record<string, string> = {
-        "not-allowed": "Microphone permission was blocked",
-        "service-not-allowed": "Speech service is blocked in this browser",
-        "no-speech": "No speech detected",
-        "audio-capture": "No microphone was found",
-        network: "Speech service network error",
-      };
-
-      speechStartingRef.current = false;
-      speechErrorRef.current = true;
-      setListening(false);
-      setSpeechStatus(messages[event.error] || "Voice input stopped");
-    };
-
-    recognition.onend = () => {
-      // Runs when the browser stops listening.
-      // If any final words were heard, the status confirms they were added.
-      speechStartingRef.current = false;
-      setListening(false);
-
-      if (speechStoppedByUserRef.current) {
-        setSpeechStatus("Voice input stopped");
-      } else if (finalTranscriptRef.current.trim()) {
-        setSpeechStatus("Voice added to message");
-      } else if (!speechErrorRef.current) {
-        setSpeechStatus("Voice input ended");
+      if (duplicateCount > 0) {
+        setFileWarning(`${duplicateCount} duplicate file(s) omitted.`);
+        setTimeout(() => setFileWarning(null), 4000);
       }
-    };
 
-    recognitionRef.current = recognition;
+      const processed = await Promise.all(
+        uniqueFiles.map((f) => processUploadedFile(f))
+      );
 
-    try {
-      recognition.start();
-    } catch {
-      speechStartingRef.current = false;
-      setListening(false);
-      setSpeechStatus("Voice input could not start. Try again.");
+      const errors = processed.filter((f) => f.status === "error");
+      if (errors.length > 0) {
+        setFileWarning(
+          errors[0].errorMessage ||
+          "One or more files could not be processed."
+        );
+        setTimeout(() => setFileWarning(null), 5000);
+      }
+
+      const valid = processed.filter((f) => f.status !== "error");
+      if (valid.length > 0) {
+        setAttachedFiles((prev) => [...prev, ...valid]);
+      }
+
+      setIsProcessingFiles(false);
+      setUploadMenuOpen(false);
+      e.target.value = "";
     }
   };
 
-  const containerClass = centered
-    ? "w-full max-w-3xl"
-    : "sticky bottom-0 z-20 border-t border-slate-200/70 bg-white/78 px-2.5 pb-3 pt-2.5 backdrop-blur-2xl dark:border-slate-800/80 dark:bg-slate-950/70 sm:px-4 sm:pb-3.5 md:px-5";
+  const removeFile = (index: number) => {
+    setAttachedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
 
-  const innerClass = centered ? "w-full" : "mx-auto w-full max-w-4xl";
+  const handleSubmit = (customText?: string) => {
+    // Prevent duplicate submissions and concurrent requests
+    if (loading || interactionLocked) return;
+
+    const textToSend = typeof customText === "string" ? customText : input;
+    if (!textToSend.trim() && attachedFiles.length === 0) return;
+
+    if (voicePanelOpen) {
+      setVoicePanelOpen(false);
+    }
+
+    if (imageMode && onSendImage) {
+      onSendImage(textToSend, { aspectRatio: imageAspectRatio });
+      setAttachedFiles([]);
+      setInput("");
+      setImageMode(false);
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "40px";
+        textareaRef.current.style.overflowY = "hidden";
+      }
+      return;
+    }
+
+    onSend(textToSend, attachedFiles, selectedHour, userTimezone);
+    setAttachedFiles([]);
+    setInput("");
+    setSelectedHour(null);
+
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "40px";
+      textareaRef.current.style.overflowY = "hidden";
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (!loading) {
+        handleSubmit();
+      }
+    }
+  };
 
   return (
-    <div className={containerClass}>
-      <div className={innerClass}>
-        {centered && (
-          <div className="mb-6 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-base font-semibold text-white shadow-[0_18px_50px_-24px_rgba(15,23,42,0.55)] dark:bg-white dark:text-slate-950">
-              Z
-            </div>
-            <div className="mb-3 flex flex-wrap items-center justify-center gap-2 text-[11px] font-medium uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
-              <span className="rounded-full border border-slate-200 bg-white/80 px-3 py-1 dark:border-slate-700 dark:bg-slate-900/70">
-                General
-              </span>
-              <span className="rounded-full border border-slate-200 bg-white/80 px-3 py-1 dark:border-slate-700 dark:bg-slate-900/70">
-                Coding
-              </span>
-              <span className="rounded-full border border-slate-200 bg-white/80 px-3 py-1 dark:border-slate-700 dark:bg-slate-900/70">
-                Creative
-              </span>
-            </div>
-            <h2 className="text-[1.75rem] font-semibold tracking-tight text-slate-900 dark:text-white sm:text-[2.1rem]">
-              {/* Your polished AI weather desk */}
-              Something new created for ZyroChat
-            </h2>
-            <p className="mt-2 text-[13px] text-slate-500 dark:text-slate-400 sm:text-[15px]">
-              Something new created for ZyroChat, showcasing the potential of AI
-              in transforming how we interact with information and manage our
-              daily lives.
-            </p>
+    <div className="sticky bottom-0 z-composer w-full px-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 sm:px-6 sm:pb-3 pointer-events-none">
+      <div className="mx-auto max-w-3xl xl:max-w-4xl pointer-events-auto relative">
+        {/* Floating Action Controls Docked Dynamically Above Composer Card */}
+        <div className="absolute -top-11 left-0 right-0 flex items-center justify-between px-1 pointer-events-none z-floating-button">
+          {/* Centered Stop Generation Button */}
+          <div className="flex-1 flex justify-start pointer-events-auto">
+            <AnimatePresence>
+              {loading && (
+                <motion.button
+                  type="button"
+                  initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  onClick={onStop}
+                  className="flex items-center gap-1.5 rounded-full border border-slate-200/90 bg-white/95 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-md backdrop-blur-md transition hover:bg-slate-50 hover:border-red-400 dark:border-slate-800/90 dark:bg-[#12151e]/95 dark:text-slate-200 dark:hover:bg-[#161a26] cursor-pointer select-none"
+                  aria-label="Stop generation"
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+                  <Square size={10} className="fill-current text-slate-500 dark:text-slate-400" />
+                  <span>Stop generation</span>
+                </motion.button>
+              )}
+            </AnimatePresence>
           </div>
-        )}
 
-        <div
-          className={`relative overflow-hidden rounded-[28px] border bg-white/96 shadow-[0_24px_70px_-48px_rgba(15,23,42,0.45)] transition-all duration-200 dark:bg-slate-900/96 ${centered
-              ? "border-slate-200/90 dark:border-slate-700/80"
-              : "border-slate-200/80 dark:border-slate-700/80"
-            } ${expanded
-              ? "ring-2 ring-slate-200 dark:ring-slate-700"
-              : "focus-within:border-slate-300 dark:focus-within:border-slate-600"
-            }`}
+          {/* Right-aligned Jump to Latest Messages Button */}
+          <div className="pointer-events-auto">
+            <AnimatePresence>
+              {showScrollDown && (
+                <motion.button
+                  type="button"
+                  initial={{ opacity: 0, scale: 0.9, y: 8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 8 }}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={onScrollToBottom}
+                  className="flex items-center gap-1.5 rounded-full border border-slate-200/90 bg-white/95 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-xl backdrop-blur-md transition hover:border-cyan-500/50 dark:border-slate-800/90 dark:bg-[#11141d]/95 dark:text-slate-200 cursor-pointer"
+                  aria-label="Scroll to latest messages"
+                >
+                  <ArrowDown size={13} className="text-cyan-500" />
+                  <span>{hasNewBelow ? "New messages" : "Latest messages"}</span>
+                  {hasNewBelow && (
+                    <span className="flex h-2 w-2 rounded-full bg-cyan-400 animate-ping ml-0.5" />
+                  )}
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Professional Voice Input Panel with Visualizer & Review */}
+        <VoiceInputPanel
+          isOpen={voicePanelOpen}
+          onClose={() => setVoicePanelOpen(false)}
+          onSend={(transcript) => {
+            if (imageMode && onSendImage) {
+              onSendImage(transcript, { aspectRatio: imageAspectRatio });
+              setAttachedFiles([]);
+              setInput("");
+              setImageMode(false);
+              setVoicePanelOpen(false);
+              return;
+            }
+            onSend(transcript, attachedFiles, selectedHour, userTimezone);
+            setAttachedFiles([]);
+            setInput("");
+            setSelectedHour(null);
+            setVoicePanelOpen(false);
+          }}
+          onInsert={(transcript) => {
+            setInput(input ? `${input.trim()} ${transcript}` : transcript);
+            setVoicePanelOpen(false);
+          }}
+        />
+
+        {/* Floating Composer Container Form */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
+          className="relative rounded-2xl border border-slate-200/90 bg-white/95 shadow-[0_8px_30px_rgb(0,0,0,0.06)] backdrop-blur-md transition-all focus-within:border-cyan-500/60 focus-within:ring-1 focus-within:ring-cyan-500/20 dark:border-slate-800/90 dark:bg-[#11141d]/95 dark:shadow-[0_12px_40px_rgba(0,0,0,0.4)]"
         >
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-300/80 to-transparent dark:via-slate-600/80" />
+          {/* Active AI Image Mode Indicator Pill */}
+          {imageMode && (
+            <div className="flex items-center justify-between border-b border-purple-500/20 bg-purple-500/10 px-3.5 py-1 text-[11px] font-semibold tracking-wider text-purple-600 dark:text-purple-300">
+              <div className="flex items-center gap-1.5">
+                <Sparkles size={12} className="animate-pulse text-purple-500" />
+                <span>AI IMAGE GENERATION MODE ({imageAspectRatio})</span>
+                <span className="text-[10px] font-normal text-slate-500 dark:text-slate-400 ml-1">
+                  — Real AI Image Generator
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setImageMode(false);
+                  if (mode === "image") setMode?.("auto");
+                }}
+                className="text-purple-500 hover:text-purple-700 dark:hover:text-purple-200 text-[10px] font-medium underline cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
 
-          <div className="flex items-end gap-2 px-2.5 py-2 sm:gap-3 sm:px-3.5 sm:py-2.5">
+          {/* Active Web Search Indicator Pill */}
+          {webSearchEnabled && (
+            <div className="flex items-center gap-1.5 border-b border-cyan-500/20 bg-cyan-500/10 px-3.5 py-1 text-[11px] font-semibold tracking-wider text-cyan-600 dark:text-cyan-400">
+              <Globe size={12} className="animate-spin [animation-duration:8s]" />
+              <span>WEB SEARCH ON</span>
+              <span className="text-[10px] font-normal text-slate-500 dark:text-slate-400 ml-1">
+                — ZyroChat will cite live external sources
+              </span>
+            </div>
+          )}
+
+          {/* File Processing Indicator */}
+          {isProcessingFiles && (
+            <div className="flex items-center gap-2 border-b border-cyan-500/20 bg-cyan-500/10 px-3.5 py-1.5 text-xs text-cyan-600 dark:text-cyan-400">
+              <span className="h-2 w-2 rounded-full bg-cyan-400 animate-ping" />
+              <span>Processing and extracting file contents...</span>
+            </div>
+          )}
+
+          {/* File Warning Banner */}
+          {fileWarning && (
+            <div className="flex items-center justify-between border-b border-amber-500/30 bg-amber-500/10 px-3.5 py-1.5 text-xs text-amber-600 dark:text-amber-400">
+              <span>{fileWarning}</span>
+              <button
+                type="button"
+                onClick={() => setFileWarning(null)}
+                className="text-amber-500 hover:text-amber-700 ml-2"
+              >
+                <X size={13} />
+              </button>
+            </div>
+          )}
+
+          {/* File attachment preview chips */}
+          {attachedFiles.length > 0 && (
+            <div className="border-b border-slate-100 p-2.5 dark:border-slate-800/80 space-y-2">
+              <div className="flex flex-wrap gap-2">
+                {attachedFiles.map((file, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 rounded-xl border border-slate-200/80 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-700 dark:border-slate-800 dark:bg-[#171a25] dark:text-slate-300"
+                  >
+                    <FileText size={13} className="text-cyan-500 shrink-0" />
+                    <div className="flex flex-col min-w-0">
+                      <span className="truncate max-w-[140px] font-medium text-[11px]">
+                        {file.name}
+                      </span>
+                      <span className="text-[9px] text-slate-400">
+                        {(file.size / 1024).toFixed(1)} KB
+                        {file.lineCount ? ` • ${file.lineCount} lines` : ""}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(i)}
+                      className="ml-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                      aria-label="Remove attachment"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Quick Prompt Pills for Files */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px]">
+                <Sparkles size={12} className="text-amber-500 shrink-0" />
+                <span className="text-slate-400 shrink-0">Ask:</span>
+                {FILE_QUICK_ACTIONS.map((action, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleSubmit(action.prompt)}
+                    className="rounded-lg border border-slate-200/80 bg-white px-2 py-0.5 text-slate-600 hover:border-cyan-500/50 hover:bg-cyan-50/50 hover:text-cyan-600 dark:border-slate-800 dark:bg-[#131620] dark:text-slate-300 dark:hover:border-cyan-500/40 dark:hover:bg-cyan-950/30 dark:hover:text-cyan-300 shrink-0 transition cursor-pointer"
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Main Typing Area */}
+          <div className="px-3.5 pt-3 pb-2">
             <textarea
               ref={textareaRef}
               value={input}
-              onChange={handleInput}
-              placeholder="Message ZyroChat"
-              rows={1}
+              onChange={(e) => {
+                setInput(e.target.value);
+              }}
+              onKeyDown={handleKeyDown}
+              placeholder={
+                imageMode
+                  ? "Describe the image you want to generate in detail..."
+                  : "Ask anything, analyze files, or search the web..."
+              }
               disabled={interactionLocked}
-              className={`min-h-9 flex-1 resize-none overflow-y-auto bg-transparent px-1 py-2 text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500 sm:py-1 ${centered
-                  ? "max-h-40 text-[14px] leading-6 sm:text-[15px]"
-                  : "max-h-32 text-[13px] leading-6 sm:text-[14px]"
-                }`}
-              onKeyDown={(e) => {
-                // Enter sends the message, while Shift+Enter keeps the normal
-                // textarea behavior and adds a new line.
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  if (!interactionLocked && input.trim()) onSend();
-                }
-              }}
+              rows={1}
+              className="w-full resize-none bg-transparent text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none leading-relaxed dark:text-slate-100 dark:placeholder:text-slate-500 [scrollbar-width:thin] [scrollbar-color:rgba(156,163,175,0.4)_transparent]"
             />
-
-            <button
-              type="button"
-              onClick={toggleSpeechInput}
-              disabled={interactionLocked || !speechSupported}
-              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition-all duration-200 active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 sm:h-10 sm:w-10 ${listening
-                  ? "border-red-200 bg-red-50 text-red-600 shadow-[0_0_0_4px_rgba(248,113,113,0.14)] hover:bg-red-100 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300"
-                  : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:bg-white hover:text-slate-950 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-700 dark:hover:text-white"
-                }`}
-              title={
-                !speechSupported
-                  ? "Voice input is not supported in this browser"
-                  : listening
-                    ? "Stop voice input"
-                    : "Start voice input"
-              }
-              aria-label={listening ? "Stop voice input" : "Start voice input"}
-            >
-              {speechSupported ? (
-                <Mic size={18} strokeWidth={2.3} className="sm:size-[16px]" />
-              ) : (
-                <MicOff size={18} strokeWidth={2.3} className="sm:size-[16px]" />
-              )}
-            </button>
-
-            <button
-              onClick={() => {
-                if (loading) {
-                  onStop?.();
-                } else if (!interactionLocked && input.trim()) {
-                  onSend();
-                }
-              }}
-              disabled={!loading && (interactionLocked || !input.trim())}
-              className={`group flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-all duration-300 active:scale-95 sm:h-10 sm:w-10 ${
-                loading
-                  ? "bg-rose-600 text-white shadow-[0_0_12px_rgba(239,68,68,0.45)] hover:scale-105 hover:bg-rose-500 animate-pulse"
-                  : "bg-sky-500 text-white shadow-[0_4px_12px_rgba(14,165,233,0.3)] hover:scale-105 hover:bg-sky-600 hover:shadow-[0_6px_20px_rgba(14,165,233,0.45)] disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none dark:bg-sky-400 dark:text-slate-950 dark:hover:bg-sky-300 dark:disabled:bg-slate-800 dark:disabled:text-slate-600"
-              }`}
-              title={
-                loading
-                  ? "Stop generating"
-                  : interactionLocked
-                    ? "Wait for the current response to finish"
-                    : "Send message (Shift+Enter for new line)"
-              }
-            >
-              {loading ? (
-                <Square
-                  size={16}
-                  fill="currentColor"
-                  className="transition-transform duration-300 group-hover:scale-90 sm:size-[15px]"
-                />
-              ) : (
-                <ArrowUp
-                  size={18}
-                  strokeWidth={2.5}
-                  className="transition-transform duration-300 group-hover:-translate-y-0.75 sm:size-[18px]"
-                />
-              )}
-            </button>
           </div>
+
+          {/* Controls row */}
+          <div className="flex items-center justify-between px-3 pb-2.5 flex-wrap gap-2">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {/* Optional integrated AI Mode Selector */}
+              {mode && setMode && (
+                <ModeSelector mode={mode} setMode={setMode} dropDirection="up" align="left" />
+              )}
+
+              {/* AI Image Generation Mode Toggle */}
+              {onSendImage && (
+                <ImageGenerationToggle
+                  active={imageMode}
+                  onToggle={() => setImageMode(!imageMode)}
+                  aspectRatio={imageAspectRatio}
+                  onAspectRatioChange={setImageAspectRatio}
+                  disabled={interactionLocked}
+                />
+              )}
+
+              {/* Target / Scheduled Hour Selector */}
+              <HourSelector
+                selectedHour={selectedHour}
+                onChange={setSelectedHour}
+                timezone={userTimezone}
+                dropDirection="up"
+                disabled={interactionLocked}
+              />
+
+              {/* Web Search Toggle Button */}
+              {setWebSearchEnabled && (
+                <button
+                  type="button"
+                  onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+                  className={`flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${webSearchEnabled
+                    ? "border-cyan-500 bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.25)]"
+                    : "border-slate-200/80 bg-slate-50 text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:border-slate-800 dark:bg-[#151924] dark:text-slate-400 dark:hover:border-slate-700 dark:hover:text-slate-200"
+                    }`}
+                  title={
+                    webSearchEnabled
+                      ? "Web search is active"
+                      : "Enable real-time Web Search"
+                  }
+                >
+                  <Globe
+                    size={13}
+                    className={
+                      webSearchEnabled
+                        ? "text-cyan-500 animate-spin [animation-duration:10s]"
+                        : ""
+                    }
+                  />
+                  <span>Search</span>
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              {/* Attachment Button & Popup */}
+              <div className="relative" ref={attachmentMenuRef}>
+                <input
+                  type="file"
+                  id="file-upload-doc"
+                  className="hidden"
+                  onChange={handleFileChange}
+                  multiple
+                />
+                <input
+                  type="file"
+                  id="file-upload-image"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                  multiple
+                />
+                <input
+                  type="file"
+                  id="file-upload-code"
+                  accept=".js,.ts,.tsx,.jsx,.py,.html,.css,.json,.md,.sql,.sh,.c,.cpp"
+                  className="hidden"
+                  onChange={handleFileChange}
+                  multiple
+                />
+                <input
+                  type="file"
+                  id="file-upload-camera"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    !interactionLocked && setUploadMenuOpen(!uploadMenuOpen)
+                  }
+                  disabled={interactionLocked}
+                  className={`flex h-8 w-8 items-center justify-center rounded-xl border transition-colors cursor-pointer ${uploadMenuOpen
+                    ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
+                    : "border-slate-200/80 bg-slate-50 text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:border-slate-800 dark:bg-[#151924] dark:text-slate-400 dark:hover:border-slate-700 dark:hover:text-slate-200"
+                    }`}
+                  title="Attach files or code"
+                  aria-label="Attach files"
+                >
+                  <Paperclip size={15} />
+                </button>
+
+                <AnimatePresence>
+                  {uploadMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: 6 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: 6 }}
+                      transition={{ duration: 0.12 }}
+                      className="absolute bottom-full right-0 z-dropdown mb-2 w-48 max-w-[calc(100vw-24px)] rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl backdrop-blur-md dark:border-slate-800 dark:bg-[#12151e]"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          document.getElementById("file-upload-doc")?.click();
+                        }}
+                        className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-[#171b26] cursor-pointer"
+                      >
+                        <Laptop size={14} className="text-slate-400" />
+                        <span>Upload document</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          document.getElementById("file-upload-image")?.click();
+                        }}
+                        className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-[#171b26] cursor-pointer"
+                      >
+                        <ImageIcon size={14} className="text-slate-400" />
+                        <span>Upload image</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          document.getElementById("file-upload-code")?.click();
+                        }}
+                        className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-[#171b26] cursor-pointer"
+                      >
+                        <Code2 size={14} className="text-slate-400" />
+                        <span>Attach code file</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          if (loading) {
+                            onStop?.();
+                          } else if (!interactionLocked && input.trim()) {
+                            onSend();
+                          }
+                        }}
+                        disabled={!loading && (interactionLocked || !input.trim())}
+                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-all duration-200 active:scale-95 sm:h-10 sm:w-10 ${loading
+                          ? "bg-red-600 text-white shadow-[0_0_12px_rgba(239,68,68,0.45)] hover:scale-105 hover:bg-red-500 animate-pulse"
+                          : "bg-slate-900 text-white shadow-md hover:scale-105 hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:hover:scale-100 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:disabled:bg-slate-700 dark:disabled:text-slate-500"
+                          }`}
+                        title={
+                          loading
+                            ? "Stop generating"
+                            : interactionLocked
+                              ? "Wait for the current response to finish"
+                              : "Send message (Shift+Enter for new line)"
+                        }
+                      >
+                        {loading ? (
+                          <Square size={16} fill="currentColor" className="sm:size-[15px]" />
+                        ) : (
+                          <ArrowUp size={18} strokeWidth={2.5} className="sm:size-[18px]" />
+                        )}
+                      </button>
+                    </div>
 
           {/* {centered && (
             <div className="flex flex-wrap gap-2 px-4 pb-3">
@@ -465,14 +636,17 @@ export default function ChatInput({
                 </button>
               ))}
             </div>
-          )} */}
-
-          <div className="flex items-center justify-between border-t border-slate-200/80 px-4 py-2 text-[10px] text-slate-500 dark:border-slate-800 dark:text-slate-400">
-            <span>Shift + Enter for a new line</span>
-            <span>{speechStatus || "AI can make mistakes"}</span>
           </div>
-        </div>
-      </div>
-    </div>
-  );
+
+          {/* Bottom helper row */}
+                  <div className="flex items-center justify-between border-t border-slate-100/80 px-3.5 py-1.5 text-[10px] text-slate-400 dark:border-slate-800/60 dark:text-slate-500 select-none font-normal">
+                    <span>Shift + Enter for new line</span>
+                    <span className="hidden xs:inline">
+                      ZyroChat AI Workspace • Fast & Reliable
+                    </span>
+                  </div>
+                </form>
+              </div>
+            </div>
+            );
 }

@@ -35,74 +35,80 @@ export async function streamOpenRouterText(
 ) {
   const reader = body.getReader();
   const decoder = new TextDecoder("utf-8");
-  
-  let buffer = "";            // Temporary holding container for incomplete JSON lines
-  let targetText = "";        // The full text we have received from the server so far
-  let displayedText = "";     // The text currently typed out and shown on the screen
+
+  const isSmooth =
+    localStorage.getItem("zyrochat-smooth-stream") !== "false" &&
+    localStorage.getItem("app-smooth-stream") !== "false";
+
+  let buffer = ""; // Temporary holding container for incomplete JSON lines
+  let targetText = ""; // The full text we have received from the server so far
+  let reasoningText = ""; // Reasoning thoughts emitted by models (Nemotron, DeepSeek, etc.)
+  let displayedText = ""; // The text currently typed out and shown on the screen
   let isStreamFinished = false; // Flag indicating if the network connection has finished
 
-  // 4. Background typing loop: Interpolates the text output to make it look smooth like ChatGPT
-  const typingPromise = (async () => {
-    while (true) {
-      if (signal.aborted) {
-        throw new Error("Stream aborted");
-      }
+  // Background typing loop (only active if smooth streaming is enabled)
+  const typingPromise = isSmooth
+    ? (async () => {
+        while (!signal.aborted) {
+          const diff = targetText.length - displayedText.length;
 
-      // Calculate how many characters are waiting in the queue to be typed
-      const diff = targetText.length - displayedText.length;
-
-      if (diff > 0) {
-        // Adjust typing speed dynamically based on how far behind the stream we are.
-        // If we have a huge burst of text, type faster (up to 5 characters per step) to catch up.
-        // Otherwise, type 1 character per step for a smooth animation.
-        const charsToType = diff > 40 ? 5 : diff > 15 ? 2 : 1;
-        displayedText += targetText.substring(displayedText.length, displayedText.length + charsToType);
-        
-        // Notify the chat UI with the newly updated text
-        onChunk(displayedText);
-      } else if (isStreamFinished) {
-        // If the server stopped sending data and we finished typing all letters, exit
-        break;
-      }
-
-      // 15ms step duration for a steady 60fps-like fluid typing animation
-      await new Promise((resolve) => setTimeout(resolve, 15));
-    }
-  })();
-
-  try {
-    // 5. Main network loop: Reads incoming stream chunks from the server
-    while (true) {
-      if (signal.aborted) {
-        throw new Error("Stream aborted");
-      }
-
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      // Append raw decoded text to the line buffer
-      buffer += decoder.decode(value, { stream: true });
-
-      const lines = buffer.split("\n");
-      buffer = lines.pop() ?? "";
-
-      // Parse each completed line
-      for (const rawLine of lines) {
-        const line = rawLine.trim();
-        if (!line) continue;
-
-        // Parse standard SSE chunks (data: ...)
-        if (line.startsWith("data:")) {
-          const json = line.replace("data:", "").trim();
-          if (json === "[DONE]") {
+          if (diff > 0) {
+            const charsToType = diff > 40 ? 6 : diff > 15 ? 2 : 1;
+            displayedText += targetText.substring(
+              displayedText.length,
+              displayedText.length + charsToType
+            );
+            onChunk(displayedText);
+          } else if (isStreamFinished) {
             break;
           }
 
+          // Constant typing pace (15 milliseconds per tick)
+          await new Promise((resolve) => setTimeout(resolve, 15));
+        }
+      })()
+    : null;
+
+  try {
+    while (!signal.aborted) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const rawLine of lines) {
+        const line = rawLine.trim();
+        // Skip empty lines and SSE comments (e.g. ": OPENROUTER PROCESSING")
+        if (!line || line.startsWith(":")) continue;
+
+        if (line.startsWith("data:")) {
+          const json = line.replace("data:", "").trim();
+          if (json === "[DONE]") break;
+
           try {
             const parsed = JSON.parse(json);
-            const token = parsed?.choices?.[0]?.delta?.content;
-            if (token) {
-              targetText += token; // Feed characters into the typewriter queue
+            const delta = parsed?.choices?.[0]?.delta;
+            const content = delta?.content || "";
+            const reasoning =
+              delta?.reasoning ||
+              delta?.reasoning_content ||
+              delta?.reasoning_details?.[0]?.text ||
+              "";
+
+            if (content) {
+              targetText += content;
+              if (!isSmooth) {
+                onChunk(targetText);
+              }
+            } else if (reasoning) {
+              reasoningText += reasoning;
+              // If main content has not started yet, show live thinking preview so user sees instant activity
+              if (!targetText) {
+                const preview = reasoningText.slice(-140).replace(/\r?\n/g, " ").trim();
+                onChunk(`*Thinking...*\n\n> ${preview}...`);
+              }
             }
           } catch {
             // Ignore incomplete frames
@@ -110,13 +116,15 @@ export async function streamOpenRouterText(
           continue;
         }
 
-        // Parse legacy Vercel AI SDK chunks (0:...)
         if (line.startsWith("0:")) {
           const json = line.replace("0:", "").trim();
           try {
             const token = JSON.parse(json);
             if (typeof token === "string") {
-              targetText += token; // Feed characters into the typewriter queue
+              targetText += token;
+              if (!isSmooth) {
+                onChunk(targetText);
+              }
             }
           } catch {
             // Ignore incomplete frames
@@ -126,16 +134,23 @@ export async function streamOpenRouterText(
       }
     }
 
-    // Mark that the server is done sending data
     isStreamFinished = true;
-    
-    // Wait for the background typewriter loop to finish typing out all the remaining buffered characters
-    await typingPromise;
+    if (typingPromise) {
+      await typingPromise;
+    }
   } finally {
     isStreamFinished = true;
-    reader.releaseLock();
+    try {
+      reader.releaseLock();
+    } catch {}
   }
 
-  // Return the completed target text
+  // If the model generated reasoning thoughts but no explicit content, use reasoning output
+  if (!targetText.trim() && reasoningText.trim()) {
+    targetText = reasoningText;
+  }
+
+  // Final chunk sync to guarantee entire text is rendered
+  onChunk(targetText);
   return targetText;
 }

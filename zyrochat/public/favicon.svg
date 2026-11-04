@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
-  <title id="title">ZyroChat favicon</title>
-  <desc id="desc">A ZyroChat chat bubble logo with a Z mark.</desc>
+  <title id="title">AI Workspace favicon</title>
+  <desc id="desc">AI Chat emblem</desc>
   <defs>
     <linearGradient id="bubble" x1="10" y1="8" x2="54" y2="58" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#00c2a8" />
+      <stop offset="0%" stop-color="#00c2a8" />
       <stop offset="0.55" stop-color="#2563eb" />
       <stop offset="1" stop-color="#f43f5e" />
     </linearGradient>

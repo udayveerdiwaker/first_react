@@ -1,8 +1,8 @@
-# ZyroChat Codebase Documentation
+# Antigravity Codebase Documentation
 
 ## 1. Overview
 
-ZyroChat is a React + TypeScript frontend paired with a lightweight Express backend. The application delivers a chat-style AI assistant with:
+Antigravity is a React + TypeScript frontend paired with a lightweight Express backend. The application delivers a chat-style AI assistant with:
 
 - streamed answers through OpenRouter
 - local and backend-provided tools

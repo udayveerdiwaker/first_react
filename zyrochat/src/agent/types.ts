@@ -9,13 +9,96 @@
  * - liked: True if the user liked this response
  * - disliked: True if the user disliked this response
  */
+export interface Attachment {
+  name: string;
+  size: number;
+  type: string;
+  url?: string;
+}
+
+export interface SourceCitation {
+  title: string;
+  url: string;
+  snippet?: string;
+  source?: string;
+}
+
+export interface ToolStatusInfo {
+  name: string;
+  label: string;
+  status: "running" | "completed" | "error";
+  output?: string;
+}
+
+import type { WorkspaceArtifact, ArtifactVersion } from "../utils/artifactManager";
+export type { WorkspaceArtifact, ArtifactVersion };
+
 export interface ChatMessage {
+  id?: string;
   role: "user" | "bot";
   text: string;
   loading?: boolean;
   error?: boolean;
+  status?: "pending" | "sending" | "streaming" | "completed" | "failed" | "cancelled" | "interrupted";
+  generationId?: string;
+  requestId?: string;
+  createdAt?: number;
   liked?: boolean;
   disliked?: boolean;
+  attachments?: Attachment[];
+  sources?: SourceCitation[];
+  toolCall?: ToolStatusInfo;
+  artifacts?: WorkspaceArtifact[];
+  hour?: string;
+  timezone?: string;
+  imageGeneration?: ImageGenerationInfo;
+}
+
+export interface ImageGenerationInfo {
+  id: string;
+  prompt: string;
+  revisedPrompt?: string;
+  aspectRatio?: "1:1" | "16:9" | "9:16" | "4:3";
+  provider?: string;
+  quality?: string;
+  style?: string;
+  status: "pending" | "generating" | "completed" | "failed" | "cancelled";
+  imageUrl?: string;
+  images?: string[];
+  localPath?: string;
+  mimeType?: string;
+  width?: number;
+  height?: number;
+  fileSize?: number;
+  error?: string;
+  createdAt?: number;
+  completedAt?: number;
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  instructions?: string;
+  color?: string;
+  createdAt: number;
+  updatedAt?: number;
+}
+
+export interface MemoryItem {
+  id: string;
+  key: string;
+  value: string;
+  category?: string;
+  createdAt: number;
+}
+
+export interface SavedPrompt {
+  id: string;
+  title: string;
+  prompt: string;
+  category: string;
+  tags?: string[];
 }
 
 /**
@@ -36,7 +119,7 @@ export interface AgentToolDefinition {
     description: string;
     parameters: {
       type: "object";
-      properties: Record<string, { type: string }>;
+      properties: Record<string, { type: string; description?: string; enum?: string[] }>;
       required?: string[];
     };
   };

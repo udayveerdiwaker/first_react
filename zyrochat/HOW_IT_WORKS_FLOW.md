@@ -1,4 +1,4 @@
-# How ZyroChat Works (Easy Guide)
+# How Antigravity Works (Easy Guide)
 
 This guide explains how this chat application works in simple English.
 
@@ -6,7 +6,7 @@ This guide explains how this chat application works in simple English.
 
 ## 🌟 The Big Picture
 
-ZyroChat is a chat app where you can talk to an AI assistant. 
+Antigravity is a chat app where you can talk to an AI assistant. 
 When you type a message, the app sends it to the AI. The AI can either:
 1. **Answer directly** (normal chat).
 2. **Use a Tool** to get real-time info (like Weather, Date & Time, Calculator, News, or Air Quality).

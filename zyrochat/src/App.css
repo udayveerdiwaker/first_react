@@ -6,8 +6,9 @@
     font-size: 14px;
   }
 
-  /* Optimize touch targets for mobile (min 44px height) */
-  button, input, textarea {
+  /* Optimize primary form inputs for mobile touch targets without breaking compact toolbars/buttons */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  textarea {
     min-height: 44px;
   }
 }

@@ -11,10 +11,37 @@ node_modules
 dist
 dist-ssr
 *.local
+
+# Environment variables & secrets (NEVER commit to GitHub)
 .env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
 .env.*
+!.env.example
+!.env.template
+
+# Backend environment variables
 backend/.env
+backend/.env.local
 backend/.env.*
+!backend/.env.example
+!backend/.env.template
+
+# Universal catch-all for any nested .env files
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.template
+
+# Local database, runtime data & generated images
+backend/data/
+*.db.json*
+*.tmp*
 
 # Editor directories and files
 .vscode/*

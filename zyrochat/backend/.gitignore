@@ -1,0 +1,12 @@
+# Environment files & secrets (NEVER commit to GitHub)
+.env
+.env.local
+.env.*
+!.env.example
+!.env.template
+
+# Runtime data & dependencies
+node_modules/
+data/
+*.db.json*
+*.tmp*
