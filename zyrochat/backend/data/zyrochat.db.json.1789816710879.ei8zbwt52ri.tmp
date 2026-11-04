@@ -1,0 +1,1146 @@
+{
+  "users": [
+    {
+      "id": "usr-admin",
+      "email": "admin@zyrochat.local",
+      "name": "ZyroChat Administrator",
+      "role": "admin",
+      "status": "active",
+      "passwordHash": "zyrochat_admin_seed",
+      "createdAt": 1789701283775,
+      "updatedAt": 1789701283775
+    },
+    {
+      "id": "usr-member-1",
+      "email": "alex@zyrochat.local",
+      "name": "Alex Rivera",
+      "role": "member",
+      "status": "active",
+      "passwordHash": "zyrochat_member_seed",
+      "createdAt": 1789701283775,
+      "updatedAt": 1789751262009
+    }
+  ],
+  "workspaces": [
+    {
+      "id": "ws-default",
+      "name": "Main Workspace",
+      "description": "Default collaborative enterprise workspace for ZyroChat.",
+      "ownerId": "usr-admin",
+      "isDefault": true,
+      "createdAt": 1789701283775,
+      "updatedAt": 1789701283775
+    }
+  ],
+  "workspace_members": [
+    {
+      "id": "wsm-1",
+      "workspaceId": "ws-default",
+      "userId": "usr-admin",
+      "role": "owner",
+      "createdAt": 1789701283775
+    },
+    {
+      "id": "wsm-2",
+      "workspaceId": "ws-default",
+      "userId": "usr-member-1",
+      "role": "member",
+      "createdAt": 1789701283775
+    }
+  ],
+  "projects": [],
+  "conversations": [
+    {
+      "id": "conv-e2cc973a-1678-47ac-a359-4b1dd440a9fe",
+      "workspaceId": "ws-default",
+      "userId": "usr-admin",
+      "title": "Branch: Wiki (msg 6)",
+      "parentConversationId": "local-1789751120631",
+      "branchedFromMessageId": "msg-idx-5",
+      "branchedAtIndex": 5,
+      "createdAt": 1789751120651,
+      "updatedAt": 1789751120651
+    },
+    {
+      "id": "conv-7142e384-9819-4974-80aa-ab6f2eed4fbf",
+      "workspaceId": "ws-default",
+      "userId": "usr-admin",
+      "title": "Branch: Branch: Wiki (msg 6) (msg 6)",
+      "parentConversationId": "branch-1789751120631",
+      "branchedFromMessageId": "msg-idx-5",
+      "branchedAtIndex": 5,
+      "createdAt": 1789751130813,
+      "updatedAt": 1789751130813
+    },
+    {
+      "id": "conv-d5215f6e-bab6-4325-8c7e-3023783cfffa",
+      "workspaceId": "ws-default",
+      "userId": "usr-admin",
+      "title": "Branched Test Chat",
+      "parentConversationId": "conv-test",
+      "branchedFromMessageId": "msg-idx-1",
+      "branchedAtIndex": 1,
+      "createdAt": 1789802347971,
+      "updatedAt": 1789802347971
+    },
+    {
+      "id": "conv-ae2e9ef4-a5a9-4dba-8271-a7888dd98bd1",
+      "workspaceId": "ws-default",
+      "userId": "usr-admin",
+      "title": "Branched Test Chat",
+      "parentConversationId": "conv-test",
+      "branchedFromMessageId": "msg-idx-1",
+      "branchedAtIndex": 1,
+      "createdAt": 1789802548195,
+      "updatedAt": 1789802548195
+    },
+    {
+      "id": "conv-af1fb2d5-575d-4da4-8395-db364638b806",
+      "workspaceId": "ws-default",
+      "userId": "usr-admin",
+      "title": "Branched Test Chat",
+      "parentConversationId": "conv-test",
+      "branchedFromMessageId": "msg-idx-1",
+      "branchedAtIndex": 1,
+      "createdAt": 1789802651124,
+      "updatedAt": 1789802651124
+    },
+    {
+      "id": "conv-529fa366-2e91-4826-b993-eaf3f5eb8803",
+      "workspaceId": "ws-default",
+      "userId": "usr-admin",
+      "title": "Branched Test Chat",
+      "parentConversationId": "conv-test",
+      "branchedFromMessageId": "msg-idx-1",
+      "branchedAtIndex": 1,
+      "createdAt": 1789816710761,
+      "updatedAt": 1789816710761
+    }
+  ],
+  "messages": [
+    {
+      "id": "mess-51ff1f40-d02e-4007-a4ae-512fd49d8702",
+      "conversationId": "conv-e2cc973a-1678-47ac-a359-4b1dd440a9fe",
+      "role": "user",
+      "text": "wiki",
+      "sources": [],
+      "attachments": [],
+      "index": 0,
+      "createdAt": 1789751120672,
+      "updatedAt": 1789751120672
+    },
+    {
+      "id": "mess-9bef9f54-2b0b-40f1-b32a-202caa13ae2e",
+      "conversationId": "conv-e2cc973a-1678-47ac-a359-4b1dd440a9fe",
+      "role": "bot",
+      "text": "# Wiki\n\n## Definition\nA **wiki** is a collaborative website or platform that allows users to create, edit, and manage content collectively through a web browser. The core principle is **open collaboration** — anyone (or authorized users) can contribute and modify content directly.\n\n## Key Characteristics\n\n| Feature | Description |\n|---|---|\n| **Collaborative Editing** | Multiple users can edit pages simultaneously or asynchronously |\n| **Version History** | All changes are tracked, allowing rollback to previous versions |\n| **Hyperlinking** | Pages are interconnected through wiki-links, creating a knowledge graph |\n| **Simple Markup** | Content is typically created using lightweight formatting (not full HTML) |\n| **Access Control** | Ranges from fully open (public) to restricted (private/enterprise) |\n\n## Brief History\n- **1995** — Ward Cunningham created the first wiki, **WikiWikiWeb**, for the Portland Pattern Repository. The term \"wiki\" comes from the Hawaiian word meaning *\"quick.\"*\n- **2001** — **Wikipedia** launched, becoming the largest and most well-known wiki in existence.\n- **2000s–present** — Wikis evolved into enterprise tools (Confluence, Notion, MediaWiki deployments) and knowledge management systems.\n\n## Notable Wiki Platforms\n\n- **Wikipedia** — The largest public wiki, a free encyclopedia with 60+ million articles across 300+ languages.\n- **MediaWiki** — Open-source wiki software powering Wikipedia and many other wikis.\n- **Confluence** — Atlassian's enterprise wiki for team documentation.\n- **Notion** — A modern all-in-one workspace blending wiki, database, and project management features.\n- **Fandom (formerly Wikia)** — Hosting community-driven wikis for pop culture, gaming, and more.\n- **GitBook / BookStack** — Developer-oriented and self-hosted wiki solutions.\n\n## Common Use Cases\n\n1. **Knowledge Bases** — Internal company documentation, FAQs, SOPs\n2. **Collaborative Research** — Academic teams sharing references and notes\n3. **Community Encyclopedias** — Fan wikis, open-source project docs\n4. **Project Management** — Sprint planning, requirement tracking\n5. **Education** — Classroom collaboration, shared learning resources\n\n## Pros & Cons\n\n| ✅ Advantages | ⚠️ Challenges |\n|---|---|\n| Easy to create and edit | Vulnerability to vandalism or inaccurate edits |\n| Rapid knowledge sharing | Quality control can be difficult at scale |\n| Centralized information | Information architecture can degrade without maintenance |\n| Transparent version history | Privacy/confidentiality requires careful access management |\n\n---\n\nIf you'd like me to **create a wiki document**, **set up a wiki structure** for a specific topic, or **compare wiki platforms** for your use case, just let me know.",
+      "sources": [],
+      "attachments": [],
+      "index": 1,
+      "createdAt": 1789751120682,
+      "updatedAt": 1789751120682
+    },
+    {
+      "id": "mess-ad41913c-2ac3-4d5c-8d55-7042f14550c5",
+      "conversationId": "conv-e2cc973a-1678-47ac-a359-4b1dd440a9fe",
+      "role": "user",
+      "text": "hi",
+      "sources": [],
+      "attachments": [],
+      "index": 2,
+      "createdAt": 1789751120693,
+      "updatedAt": 1789751120693
+    },
+    {
+      "id": "mess-c366e06e-5800-4a16-9c06-3702efec2451",
+      "conversationId": "conv-7142e384-9819-4974-80aa-ab6f2eed4fbf",
+      "role": "user",
+      "text": "wiki",
+      "sources": [],
+      "attachments": [],
+      "index": 0,
+      "createdAt": 1789751130830,
+      "updatedAt": 1789751130830
+    },
+    {
+      "id": "mess-763282a3-8f18-4f5b-be80-5495b6b6e793",
+      "conversationId": "conv-7142e384-9819-4974-80aa-ab6f2eed4fbf",
+      "role": "bot",
+      "text": "# Wiki\n\n## Definition\nA **wiki** is a collaborative website or platform that allows users to create, edit, and manage content collectively through a web browser. The core principle is **open collaboration** — anyone (or authorized users) can contribute and modify content directly.\n\n## Key Characteristics\n\n| Feature | Description |\n|---|---|\n| **Collaborative Editing** | Multiple users can edit pages simultaneously or asynchronously |\n| **Version History** | All changes are tracked, allowing rollback to previous versions |\n| **Hyperlinking** | Pages are interconnected through wiki-links, creating a knowledge graph |\n| **Simple Markup** | Content is typically created using lightweight formatting (not full HTML) |\n| **Access Control** | Ranges from fully open (public) to restricted (private/enterprise) |\n\n## Brief History\n- **1995** — Ward Cunningham created the first wiki, **WikiWikiWeb**, for the Portland Pattern Repository. The term \"wiki\" comes from the Hawaiian word meaning *\"quick.\"*\n- **2001** — **Wikipedia** launched, becoming the largest and most well-known wiki in existence.\n- **2000s–present** — Wikis evolved into enterprise tools (Confluence, Notion, MediaWiki deployments) and knowledge management systems.\n\n## Notable Wiki Platforms\n\n- **Wikipedia** — The largest public wiki, a free encyclopedia with 60+ million articles across 300+ languages.\n- **MediaWiki** — Open-source wiki software powering Wikipedia and many other wikis.\n- **Confluence** — Atlassian's enterprise wiki for team documentation.\n- **Notion** — A modern all-in-one workspace blending wiki, database, and project management features.\n- **Fandom (formerly Wikia)** — Hosting community-driven wikis for pop culture, gaming, and more.\n- **GitBook / BookStack** — Developer-oriented and self-hosted wiki solutions.\n\n## Common Use Cases\n\n1. **Knowledge Bases** — Internal company documentation, FAQs, SOPs\n2. **Collaborative Research** — Academic teams sharing references and notes\n3. **Community Encyclopedias** — Fan wikis, open-source project docs\n4. **Project Management** — Sprint planning, requirement tracking\n5. **Education** — Classroom collaboration, shared learning resources\n\n## Pros & Cons\n\n| ✅ Advantages | ⚠️ Challenges |\n|---|---|\n| Easy to create and edit | Vulnerability to vandalism or inaccurate edits |\n| Rapid knowledge sharing | Quality control can be difficult at scale |\n| Centralized information | Information architecture can degrade without maintenance |\n| Transparent version history | Privacy/confidentiality requires careful access management |\n\n---\n\nIf you'd like me to **create a wiki document**, **set up a wiki structure** for a specific topic, or **compare wiki platforms** for your use case, just let me know.",
+      "sources": [],
+      "attachments": [],
+      "index": 1,
+      "createdAt": 1789751130844,
+      "updatedAt": 1789751130844
+    },
+    {
+      "id": "mess-5784a498-7670-4586-8228-0d6a8218de03",
+      "conversationId": "conv-7142e384-9819-4974-80aa-ab6f2eed4fbf",
+      "role": "user",
+      "text": "hi",
+      "sources": [],
+      "attachments": [],
+      "index": 2,
+      "createdAt": 1789751130853,
+      "updatedAt": 1789751130853
+    },
+    {
+      "id": "mess-b14a5e50-946b-48d8-8700-3391cccb9be8",
+      "conversationId": "conv-7142e384-9819-4974-80aa-ab6f2eed4fbf",
+      "role": "bot",
+      "text": "Hello! I'm ZyroChat, your professional AI workspace assistant. I can help with:\n\n- **Chat & research** — Answer questions, gather information, brainstorm ideas\n- **Writing & documents** — Create, edit, or organize content\n- **Coding** — Write, debug, or architect software solutions\n- **File & data analysis** — Process and understand your datasets\n- **Project productivity** — Manage workflows and plan initiatives\n\nWhat would you like to tackle today?",
+      "sources": [],
+      "attachments": [],
+      "index": 3,
+      "createdAt": 1789751130867,
+      "updatedAt": 1789751130867
+    },
+    {
+      "id": "mess-dd546a7e-23da-4e34-9202-71fa7f05829f",
+      "conversationId": "conv-7142e384-9819-4974-80aa-ab6f2eed4fbf",
+      "role": "user",
+      "text": "can you create a project",
+      "sources": [],
+      "attachments": [],
+      "index": 4,
+      "createdAt": 1789751130879,
+      "updatedAt": 1789751130879
+    },
+    {
+      "id": "mess-0f1338ee-8ef4-43f7-8b3a-e49665364bd5",
+      "conversationId": "conv-7142e384-9819-4974-80aa-ab6f2eed4fbf",
+      "role": "bot",
+      "text": "# Project Creation\n\nI can absolutely help. To give you the most useful output, I need a bit more context:\n\n## What kind of project?\n\n| Type | Examples |\n|---|---|\n| **Software** | Web app, CLI tool, API, library, mobile app |\n| **Document / Plan** | Project charter, roadmap, PRD, spec doc |\n| **Structure / Scaffold** | Folder hierarchy, config files, starter templates |\n| **Data / Analysis** | Pipeline, notebook, dashboard |\n\n## To get started, tell me:\n\n1. **Goal** — What is the project supposed to do or deliver?\n2. **Tech / Format** (if applicable) — e.g., Python, TypeScript, Markdown, Figma-style wireframe\n3. **Scope** — MVP / full build / just the scaffolding\n4. **Constraints** — Deadline, team size, existing codebase\n\n---\n\n### Quick example\n\nIf you said:\n\n> *\"Create a Python CLI tool that parses CSV files and outputs a summary report.\"*\n\nI'd deliver:\n\n- Folder structure\n- `main.py` with working logic\n- `requirements.txt`\n- `README.md` with usage instructions\n\n---\n\nWhat are you building? Give me the details and I'll scaffold it.Here are some starter templates I can generate for you right now:\n\n### 🚀 Ready-to-Run Scaffolds\n\n**1. Python Project**\n```\nmy-project/\n├── src/\n│   ├── __init__.py\n│   └── main.py\n├── tests/\n├── requirements.txt\n├── pyproject.toml\n└── README.md\n```\n\n**2. Node.js / TypeScript Web App**\n```\nmy-app/\n├── src/\n│   ├── index.ts\n│   ├── routes/\n│   └── controllers/\n├── public/\n├── package.json\n├── tsconfig.json\n├── .env.example\n└── README.md\n```\n\n**3. HTML/CSS/JS Landing Page**\n```\nlanding-page/\n├── index.html\n├── css/\n│   └── styles.css\n├── js/\n│   └── app.js\n└── assets/\n    └── images/\n```\n\n**4. Markdown Project Documentation**\n```\nproject-docs/\n├── README.md\n├── PRD.md\n├── roadmap.md\n├── changelog.md\n└── diagrams/\n```\n\n---\n\n### What I need from you:\n\n- **Pick a template above** or describe something custom\n- **Name your project**\n- **Specify any features** — authentication, database, API endpoints, UI components\n\nI'll generate the full file contents, ready to copy and run. Just say the word.",
+      "sources": [],
+      "attachments": [],
+      "index": 5,
+      "createdAt": 1789751130897,
+      "updatedAt": 1789751130897
+    },
+    {
+      "id": "mess-0a7df0a8-8792-464a-8d32-b15660fafe40",
+      "conversationId": "conv-d5215f6e-bab6-4325-8c7e-3023783cfffa",
+      "role": "user",
+      "text": "Hello AI",
+      "sources": [],
+      "attachments": [],
+      "index": 0,
+      "createdAt": 1789802347978,
+      "updatedAt": 1789802347978
+    },
+    {
+      "id": "mess-f77b3466-3fca-4cb0-b633-ca3da63ada44",
+      "conversationId": "conv-d5215f6e-bab6-4325-8c7e-3023783cfffa",
+      "role": "assistant",
+      "text": "Hello! How can I help?",
+      "sources": [],
+      "attachments": [],
+      "index": 1,
+      "createdAt": 1789802347982,
+      "updatedAt": 1789802347982
+    },
+    {
+      "id": "mess-c5f06385-4c1a-43a4-a507-f8f649d146f1",
+      "conversationId": "conv-ae2e9ef4-a5a9-4dba-8271-a7888dd98bd1",
+      "role": "user",
+      "text": "Hello AI",
+      "sources": [],
+      "attachments": [],
+      "index": 0,
+      "createdAt": 1789802548200,
+      "updatedAt": 1789802548200
+    },
+    {
+      "id": "mess-b854bb88-a98b-4f9b-af8c-eafc65b48ed2",
+      "conversationId": "conv-ae2e9ef4-a5a9-4dba-8271-a7888dd98bd1",
+      "role": "assistant",
+      "text": "Hello! How can I help?",
+      "sources": [],
+      "attachments": [],
+      "index": 1,
+      "createdAt": 1789802548205,
+      "updatedAt": 1789802548205
+    },
+    {
+      "id": "mess-55508465-5093-4eab-ab42-3951843ef5c7",
+      "conversationId": "conv-af1fb2d5-575d-4da4-8395-db364638b806",
+      "role": "user",
+      "text": "Hello AI",
+      "sources": [],
+      "attachments": [],
+      "index": 0,
+      "createdAt": 1789802651129,
+      "updatedAt": 1789802651129
+    },
+    {
+      "id": "mess-363fe269-c339-4468-9121-56818881fa2f",
+      "conversationId": "conv-af1fb2d5-575d-4da4-8395-db364638b806",
+      "role": "assistant",
+      "text": "Hello! How can I help?",
+      "sources": [],
+      "attachments": [],
+      "index": 1,
+      "createdAt": 1789802651134,
+      "updatedAt": 1789802651134
+    },
+    {
+      "id": "mess-a8848ff7-74fd-48d2-ae4b-be1953e31438",
+      "conversationId": "conv-529fa366-2e91-4826-b993-eaf3f5eb8803",
+      "role": "user",
+      "text": "Hello AI",
+      "sources": [],
+      "attachments": [],
+      "index": 0,
+      "createdAt": 1789816710768,
+      "updatedAt": 1789816710768
+    },
+    {
+      "id": "mess-b7839b2f-0646-4851-b326-b33f065003fc",
+      "conversationId": "conv-529fa366-2e91-4826-b993-eaf3f5eb8803",
+      "role": "assistant",
+      "text": "Hello! How can I help?",
+      "sources": [],
+      "attachments": [],
+      "index": 1,
+      "createdAt": 1789816710775,
+      "updatedAt": 1789816710775
+    }
+  ],
+  "knowledge_bases": [
+    {
+      "id": "kb-company-policy",
+      "workspaceId": "ws-default",
+      "name": "Company Knowledge",
+      "description": "Official policies, onboarding handbook, and engineering architecture documentation.",
+      "category": "Company",
+      "documentCount": 2,
+      "createdAt": 1789528483775,
+      "updatedAt": 1789614883775
+    },
+    {
+      "id": "kb-tech-guidelines",
+      "workspaceId": "ws-default",
+      "name": "Engineering Guidelines",
+      "description": "Coding standards, security checklist, and deployment protocols.",
+      "category": "Project",
+      "documentCount": 1,
+      "createdAt": 1789614883775,
+      "updatedAt": 1789701283775
+    }
+  ],
+  "knowledge_documents": [
+    {
+      "id": "doc-1",
+      "knowledgeBaseId": "kb-company-policy",
+      "title": "Company Security & Remote Work Policy",
+      "fileName": "security_policy_2026.pdf",
+      "fileSize": 245000,
+      "mimeType": "application/pdf",
+      "chunkCount": 3,
+      "isIndexed": true,
+      "createdAt": 1789528483775
+    },
+    {
+      "id": "doc-2",
+      "knowledgeBaseId": "kb-company-policy",
+      "title": "Employee Onboarding & Benefits Guide",
+      "fileName": "employee_handbook.docx",
+      "fileSize": 184000,
+      "mimeType": "application/docx",
+      "chunkCount": 2,
+      "isIndexed": true,
+      "createdAt": 1789614883775
+    },
+    {
+      "id": "doc-3",
+      "knowledgeBaseId": "kb-tech-guidelines",
+      "title": "Engineering Best Practices & TypeScript Protocols",
+      "fileName": "ts_architecture_guidelines.md",
+      "fileSize": 95000,
+      "mimeType": "text/markdown",
+      "chunkCount": 2,
+      "isIndexed": true,
+      "createdAt": 1789701283775
+    }
+  ],
+  "knowledge_chunks": [
+    {
+      "id": "chunk-1-1",
+      "documentId": "doc-1",
+      "knowledgeBaseId": "kb-company-policy",
+      "chunkIndex": 0,
+      "content": "Section 1: Data Protection & Password Policy. All employees must configure multi-factor authentication (MFA) across company portals. Passwords must be at least 14 characters long and rotated every 90 days. Never store credentials in plain text files or shared repositories.",
+      "tokenCount": 46,
+      "pageNumber": 1,
+      "section": "Data Protection & Access",
+      "createdAt": 1789528483775
+    },
+    {
+      "id": "chunk-1-2",
+      "documentId": "doc-1",
+      "knowledgeBaseId": "kb-company-policy",
+      "chunkIndex": 1,
+      "content": "Section 2: Remote Work & Device Security. Workspaces and devices accessing internal company repositories must have disk encryption active (FileVault or BitLocker). Public Wi-Fi connections require the company VPN tunnel at all times.",
+      "tokenCount": 42,
+      "pageNumber": 2,
+      "section": "Remote Connectivity",
+      "createdAt": 1789528483775
+    },
+    {
+      "id": "chunk-2-1",
+      "documentId": "doc-2",
+      "knowledgeBaseId": "kb-company-policy",
+      "chunkIndex": 0,
+      "content": "Benefits & Leave Structure: Full-time employees receive 24 days paid time off annually, along with 10 statutory regional holidays. Health insurance includes dental, vision, and comprehensive emergency coverage starting on day one.",
+      "tokenCount": 41,
+      "pageNumber": 4,
+      "section": "Time Off & Healthcare",
+      "createdAt": 1789614883775
+    },
+    {
+      "id": "chunk-3-1",
+      "documentId": "doc-3",
+      "knowledgeBaseId": "kb-tech-guidelines",
+      "chunkIndex": 0,
+      "content": "TypeScript Architecture: Strict typing is mandatory across all frontend and backend services. The use of 'any' is forbidden without explicit peer review. Components must handle loading, error, and empty boundary states gracefully.",
+      "tokenCount": 40,
+      "pageNumber": 1,
+      "section": "Coding Standards",
+      "createdAt": 1789701283775
+    }
+  ],
+  "workflows": [
+    {
+      "id": "wf-market-brief",
+      "workspaceId": "ws-default",
+      "name": "Market Research & Executive Briefing",
+      "description": "Takes an industry query, conducts organic web research, synthesizes competitive findings, and outputs a formatted markdown brief.",
+      "nodes": [
+        {
+          "id": "node-1",
+          "type": "Input",
+          "title": "Target Topic",
+          "config": {
+            "defaultValue": "Indian EdTech Market 2026"
+          }
+        },
+        {
+          "id": "node-2",
+          "type": "WebSearch",
+          "title": "Web Research",
+          "config": {
+            "maxResults": 5
+          }
+        },
+        {
+          "id": "node-3",
+          "type": "AI",
+          "title": "Synthesize Findings",
+          "config": {
+            "promptTemplate": "Summarize key market trends and competitors from the search results."
+          }
+        },
+        {
+          "id": "node-4",
+          "type": "Output",
+          "title": "Executive Report",
+          "config": {
+            "format": "markdown"
+          }
+        }
+      ],
+      "edges": [
+        {
+          "from": "node-1",
+          "to": "node-2"
+        },
+        {
+          "from": "node-2",
+          "to": "node-3"
+        },
+        {
+          "from": "node-3",
+          "to": "node-4"
+        }
+      ],
+      "status": "active",
+      "createdBy": "usr-admin",
+      "createdAt": 1789614883775,
+      "updatedAt": 1789701283775
+    },
+    {
+      "id": "work-beb74115-c725-420f-b2fb-539bb4ddbc40",
+      "workspaceId": "ws-default",
+      "name": "Market Research & Executive Briefing (Copy)",
+      "description": "Takes an industry query, conducts organic web research, synthesizes competitive findings, and outputs a formatted markdown brief.",
+      "nodes": [
+        {
+          "id": "node-1",
+          "type": "Input",
+          "title": "Target Topic",
+          "config": {
+            "defaultValue": "Indian EdTech Market 2026"
+          }
+        },
+        {
+          "id": "node-2",
+          "type": "WebSearch",
+          "title": "Web Research",
+          "config": {
+            "maxResults": 5
+          }
+        },
+        {
+          "id": "node-3",
+          "type": "AI",
+          "title": "Synthesize Findings",
+          "config": {
+            "promptTemplate": "Summarize key market trends and competitors from the search results."
+          }
+        },
+        {
+          "id": "node-4",
+          "type": "Output",
+          "title": "Executive Report",
+          "config": {
+            "format": "markdown"
+          }
+        }
+      ],
+      "edges": [
+        {
+          "from": "node-1",
+          "to": "node-2"
+        },
+        {
+          "from": "node-2",
+          "to": "node-3"
+        },
+        {
+          "from": "node-3",
+          "to": "node-4"
+        }
+      ],
+      "status": "draft",
+      "createdBy": "usr-admin",
+      "createdAt": 1789751377236,
+      "updatedAt": 1789751377236
+    }
+  ],
+  "workflow_runs": [
+    {
+      "id": "work-cb7303e7-3e5d-40e2-b63b-746b8bd20c32",
+      "workflowId": "wf-market-brief",
+      "status": "completed",
+      "inputs": {
+        "query": "Electric Vehicle market growth in 2026"
+      },
+      "outputs": "### AI Synthesis Report\n\n**Task**: Summarize key market trends and competitors from the search results.\n\n**Processed Information**:\n[1] \"Physics Wallah\" (wikipedia.org)\nURL: https://en.wikipedia.org/wiki/Physics_Wallah\nSummary: Minted Edtech Unicorn\". Forbes India. Retrieved 3 March 2024. Gupta, Aryaman (7 December 2022). \"PhysicsWallah, the unassuming underdog among ed - tech firms\n\n[2] \"Byju's\" (wikipedia.org)\nURL: https://en.wikipedia.org/wiki/Byju's\nSummary: members of IAMAI&#039;s India EdTech Consortium. In March 2022, it signed a contract with Qatar Investment Authority to establish a new edtech company and an R&D\n\n[3...\n\n*Analysis successfully concluded.*",
+      "logs": [
+        "[2026-09-18T16:46:23.784Z] Workflow \"Market Research & Executive Briefing\" started execution.",
+        "Running Node [Target Topic] (Input)...",
+        "Running Node [Web Research] (WebSearch)...",
+        "WebSearch retrieved 4 sources.",
+        "Running Node [Synthesize Findings] (AI)...",
+        "AI node completed synthesis.",
+        "Running Node [Executive Report] (Output)...",
+        "Output generated: ### AI Synthesis Report\n\n**Task**: Summarize key market trends and competitors f...",
+        "[2026-09-18T16:46:26.302Z] Workflow completed in 2518ms."
+      ],
+      "durationMs": 2518,
+      "createdAt": 1789749986302,
+      "updatedAt": 1789749986302
+    },
+    {
+      "id": "work-003a6776-8667-4d37-ab50-cf1f61b12040",
+      "workflowId": "wf-market-brief",
+      "status": "completed",
+      "inputs": {
+        "query": "Electric Vehicle market growth in 2026"
+      },
+      "outputs": "### AI Synthesis Report\n\n**Task**: Summarize key market trends and competitors from the search results.\n\n**Processed Information**:\n[1] \"Physics Wallah\" (wikipedia.org)\nURL: https://en.wikipedia.org/wiki/Physics_Wallah\nSummary: Minted Edtech Unicorn\". Forbes India. Retrieved 3 March 2024. Gupta, Aryaman (7 December 2022). \"PhysicsWallah, the unassuming underdog among ed - tech firms\n\n[2] \"Byju's\" (wikipedia.org)\nURL: https://en.wikipedia.org/wiki/Byju's\nSummary: members of IAMAI&#039;s India EdTech Consortium. In March 2022, it signed a contract with Qatar Investment Authority to establish a new edtech company and an R&D\n\n[3...\n\n*Analysis successfully concluded.*",
+      "logs": [
+        "[2026-09-18T17:09:07.759Z] Workflow \"Market Research & Executive Briefing\" started execution.",
+        "Running Node [Target Topic] (Input)...",
+        "Running Node [Web Research] (WebSearch)...",
+        "WebSearch retrieved 4 sources.",
+        "Running Node [Synthesize Findings] (AI)...",
+        "AI node completed synthesis.",
+        "Running Node [Executive Report] (Output)...",
+        "Output generated: ### AI Synthesis Report\n\n**Task**: Summarize key market trends and competitors f...",
+        "[2026-09-18T17:09:10.129Z] Workflow completed in 2370ms."
+      ],
+      "durationMs": 2370,
+      "createdAt": 1789751350129,
+      "updatedAt": 1789751350129
+    },
+    {
+      "id": "work-0bad18b2-d300-4ed8-9f7b-0ee166886842",
+      "workflowId": "wf-market-brief",
+      "status": "completed",
+      "inputs": {
+        "query": "Electric Vehicle market growth in 2026"
+      },
+      "outputs": "### AI Synthesis Report\n\n**Task**: Summarize key market trends and competitors from the search results.\n\n**Processed Information**:\n[1] \"Physics Wallah\" (wikipedia.org)\nURL: https://en.wikipedia.org/wiki/Physics_Wallah\nSummary: Minted Edtech Unicorn\". Forbes India. Retrieved 3 March 2024. Gupta, Aryaman (7 December 2022). \"PhysicsWallah, the unassuming underdog among ed - tech firms\n\n[2] \"Byju's\" (wikipedia.org)\nURL: https://en.wikipedia.org/wiki/Byju's\nSummary: members of IAMAI&#039;s India EdTech Consortium. In March 2022, it signed a contract with Qatar Investment Authority to establish a new edtech company and an R&D\n\n[3...\n\n*Analysis successfully concluded.*",
+      "logs": [
+        "[2026-09-18T17:09:27.222Z] Workflow \"Market Research & Executive Briefing\" started execution.",
+        "Running Node [Target Topic] (Input)...",
+        "Running Node [Web Research] (WebSearch)...",
+        "WebSearch retrieved 4 sources.",
+        "Running Node [Synthesize Findings] (AI)...",
+        "AI node completed synthesis.",
+        "Running Node [Executive Report] (Output)...",
+        "Output generated: ### AI Synthesis Report\n\n**Task**: Summarize key market trends and competitors f...",
+        "[2026-09-18T17:09:29.081Z] Workflow completed in 1859ms."
+      ],
+      "durationMs": 1859,
+      "createdAt": 1789751369081,
+      "updatedAt": 1789751369081
+    },
+    {
+      "id": "work-60ab2b88-3e69-4997-9f1b-7cdff2e65167",
+      "workflowId": "work-beb74115-c725-420f-b2fb-539bb4ddbc40",
+      "status": "completed",
+      "inputs": {
+        "query": "Electric Vehicle market growth in 2026"
+      },
+      "outputs": "### AI Synthesis Report\n\n**Task**: Summarize key market trends and competitors from the search results.\n\n**Processed Information**:\n[1] \"Physics Wallah\" (wikipedia.org)\nURL: https://en.wikipedia.org/wiki/Physics_Wallah\nSummary: Minted Edtech Unicorn\". Forbes India. Retrieved 3 March 2024. Gupta, Aryaman (7 December 2022). \"PhysicsWallah, the unassuming underdog among ed - tech firms\n\n[2] \"Byju's\" (wikipedia.org)\nURL: https://en.wikipedia.org/wiki/Byju's\nSummary: members of IAMAI&#039;s India EdTech Consortium. In March 2022, it signed a contract with Qatar Investment Authority to establish a new edtech company and an R&D\n\n[3...\n\n*Analysis successfully concluded.*",
+      "logs": [
+        "[2026-09-18T17:09:47.319Z] Workflow \"Market Research & Executive Briefing (Copy)\" started execution.",
+        "Running Node [Target Topic] (Input)...",
+        "Running Node [Web Research] (WebSearch)...",
+        "WebSearch retrieved 4 sources.",
+        "Running Node [Synthesize Findings] (AI)...",
+        "AI node completed synthesis.",
+        "Running Node [Executive Report] (Output)...",
+        "Output generated: ### AI Synthesis Report\n\n**Task**: Summarize key market trends and competitors f...",
+        "[2026-09-18T17:09:48.949Z] Workflow completed in 1630ms."
+      ],
+      "durationMs": 1630,
+      "createdAt": 1789751388949,
+      "updatedAt": 1789751388949
+    }
+  ],
+  "connectors": [
+    {
+      "id": "conn-gmail",
+      "userId": "usr-admin",
+      "provider": "gmail",
+      "status": "connected",
+      "accountName": "Work Email",
+      "accountEmail": "admin@zyrochat.local",
+      "scopes": [
+        "https://www.googleapis.com/auth/gmail.readonly"
+      ],
+      "metadata": {
+        "lastSync": 1789749750723
+      },
+      "createdAt": 1789442083775,
+      "updatedAt": 1789749750724
+    },
+    {
+      "id": "conn-drive",
+      "userId": "usr-admin",
+      "provider": "drive",
+      "status": "connected",
+      "accountName": "Google Drive Enterprise",
+      "accountEmail": "admin@zyrochat.local",
+      "scopes": [
+        "https://www.googleapis.com/auth/drive.readonly"
+      ],
+      "metadata": {
+        "totalFiles": 28,
+        "lastSync": 1789697683775
+      },
+      "createdAt": 1789442083775,
+      "updatedAt": 1789701283775
+    },
+    {
+      "id": "conn-github",
+      "userId": "usr-admin",
+      "provider": "github",
+      "status": "connected",
+      "accountName": "zyrochat-team",
+      "accountEmail": "dev@zyrochat.local",
+      "scopes": [
+        "repo:read",
+        "read:user"
+      ],
+      "metadata": {
+        "repoCount": 12,
+        "lastSync": 1789700083775
+      },
+      "createdAt": 1789528483775,
+      "updatedAt": 1789701283775
+    },
+    {
+      "id": "conn-slack",
+      "userId": "usr-admin",
+      "provider": "slack",
+      "status": "not_connected",
+      "accountName": "",
+      "accountEmail": "",
+      "scopes": [
+        "channels:read",
+        "channels:history"
+      ],
+      "metadata": {},
+      "createdAt": 1789614883775,
+      "updatedAt": 1789701283775
+    }
+  ],
+  "research_sessions": [
+    {
+      "id": "res-edtech-sample",
+      "userId": "usr-admin",
+      "topic": "Top 10 competitors in the Indian education market",
+      "status": "completed",
+      "plan": [
+        {
+          "query": "top EdTech companies India market share 2026",
+          "status": "completed"
+        },
+        {
+          "query": "Byju PhysicsWallah Unacademy market comparison India",
+          "status": "completed"
+        },
+        {
+          "query": "government initiatives Indian online education technology",
+          "status": "completed"
+        }
+      ],
+      "sources": [
+        {
+          "title": "India EdTech Market Analysis & Competitive Landscape",
+          "url": "https://example.com/reports/india-edtech",
+          "snippet": "Analysis of market consolidation, hybrid tuition models, and valuation metrics across leading Indian learning platforms."
+        },
+        {
+          "title": "National Education Technology Trends & Growth",
+          "url": "https://example.com/trends/education",
+          "snippet": "Government push for digital skilling and regional vernacular education initiatives across tier-2 and tier-3 cities."
+        }
+      ],
+      "findings": [
+        "PhysicsWallah and hybrid coaching centers lead offline-online blended enrollment in 2026.",
+        "Vernacular language learning and vocational skill courses are the fastest-growing market sub-sectors.",
+        "Sustainable unit economics and hybrid offline centers have largely replaced hyper-funded acquisition strategies."
+      ],
+      "report": "# Deep Research Report: Indian Education & EdTech Market\n\n## Executive Summary\nThe Indian education sector in 2026 is characterized by a strong shift toward hybrid omnichannel models, test-preparation consolidation, and regional language skilling.\n\n## Key Competitors\n1. **PhysicsWallah (PW)**: Market leader in affordable hybrid coaching.\n2. **Unacademy**: Dominant in civil services and test preparation.\n3. **Allen Digital**: Premier traditional offline player with strong online reach.\n4. **Vedantu**: K-12 interactive live tutoring.\n5. **upGrad**: Higher education and executive upskilling.\n\n## Limitations\nMarket valuation data is subject to private funding round estimates and evolving regulatory disclosure.",
+      "progress": 100,
+      "createdAt": 1789528483775,
+      "updatedAt": 1789528483775
+    },
+    {
+      "id": "res-1789751302520",
+      "userId": "usr-admin",
+      "topic": "wiki",
+      "status": "completed",
+      "plan": [
+        {
+          "query": "wiki market overview size trends 2026",
+          "status": "completed"
+        },
+        {
+          "query": "top competitors key players comparison in wiki",
+          "status": "completed"
+        },
+        {
+          "query": "wiki challenges limitations future outlook",
+          "status": "completed"
+        }
+      ],
+      "sources": [
+        {
+          "title": "2010 flash crash",
+          "url": "https://en.wikipedia.org/wiki/2010_flash_crash",
+          "snippet": "as the market rallied—not as the market declined. Additionally, the aggregate size of this participant&#039;s orders was not known to other market participants",
+          "subQuery": "wiki market overview size trends 2026"
+        },
+        {
+          "title": "Intel Core",
+          "url": "https://en.wikipedia.org/wiki/Intel_Core",
+          "snippet": "\"Willow Cove – Microarchitectures – Intel – Wiki Chip\". Wiki Chip. Archived from the original on January 24, 2026 . Retrieved October 23, 2020. Cutress, Ian;",
+          "subQuery": "wiki market overview size trends 2026"
+        },
+        {
+          "title": "Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Wikipedia",
+          "snippet": "volunteers, known as Wikipedians, through open collaboration and the wiki software Media Wiki . Founded by Jimmy Wales and Larry Sanger in 2001, Wikipedia has",
+          "subQuery": "wiki market overview size trends 2026"
+        },
+        {
+          "title": "List of sports figures considered the greatest",
+          "url": "https://en.wikipedia.org/wiki/List_of_sports_figures_considered_the_greatest",
+          "snippet": "Time 100 Greatest NHL Players Australian rugby league&#039;s 100 greatest players Big Three (tennis) Comparison of top chess players throughout history FIFA",
+          "subQuery": "top competitors key players comparison in wiki"
+        },
+        {
+          "title": "Android Ice Cream Sandwich",
+          "url": "https://en.wikipedia.org/wiki/Android_Ice_Cream_Sandwich",
+          "snippet": "ICS, which would notably exclude hardware navigation keys . Android blog Rootz Wiki released photos in August 2011 showing a Nexus S running a build of ICS",
+          "subQuery": "top competitors key players comparison in wiki"
+        },
+        {
+          "title": "Elo rating system",
+          "url": "https://en.wikipedia.org/wiki/Elo_rating_system",
+          "snippet": "compare players between different eras is made more difficult when inflation or deflation are present (see also Comparison of top chess players throughout",
+          "subQuery": "top competitors key players comparison in wiki"
+        },
+        {
+          "title": "Nod-Krai",
+          "url": "https://en.wikipedia.org/wiki/Nod-Krai",
+          "snippet": "True “Wealth Code” of the ACG World?]. wuhu动画人空间 (in Chinese). September 14, 2025. Retrieved June 9, 2026 – via Weixin. Nod-Krai on Genshin Impact Wiki",
+          "subQuery": "wiki challenges limitations future outlook"
+        },
+        {
+          "title": "American Enterprise Institute",
+          "url": "https://en.wikipedia.org/wiki/American_Enterprise_Institute",
+          "snippet": "arguing that environmental dangers were unproven. In an essay from the AEI outlook series of 2007, the authors discuss the Kyoto Protocol and state that the",
+          "subQuery": "wiki challenges limitations future outlook"
+        },
+        {
+          "title": "United States",
+          "url": "https://en.wikipedia.org/wiki/United_States",
+          "snippet": "April 26, 2021. The 2020 census was held on April 1, 2020. \"World Economic Outlook Database (April 2026 Edition)\". www.imf.org. International Monetary Fund",
+          "subQuery": "wiki challenges limitations future outlook"
+        }
+      ],
+      "findings": [
+        "as the market rallied—not as the market declined. Additionally, the aggregate size of this participant&#039;s orders was not known to other market participants",
+        "\"Willow Cove – Microarchitectures – Intel – Wiki Chip\". Wiki Chip. Archived from the original on January 24, 2026 . Retrieved October 23, 2020. Cutress, Ian;",
+        "volunteers, known as Wikipedians, through open collaboration and the wiki software Media Wiki . Founded by Jimmy Wales and Larry Sanger in 2001, Wikipedia has",
+        "Time 100 Greatest NHL Players Australian rugby league&#039;s 100 greatest players Big Three (tennis) Comparison of top chess players throughout history FIFA",
+        "ICS, which would notably exclude hardware navigation keys . Android blog Rootz Wiki released photos in August 2011 showing a Nexus S running a build of ICS",
+        "compare players between different eras is made more difficult when inflation or deflation are present (see also Comparison of top chess players throughout",
+        "True “Wealth Code” of the ACG World?]. wuhu动画人空间 (in Chinese). September 14, 2025. Retrieved June 9, 2026 – via Weixin. Nod-Krai on Genshin Impact Wiki",
+        "arguing that environmental dangers were unproven. In an essay from the AEI outlook series of 2007, the authors discuss the Kyoto Protocol and state that the",
+        "April 26, 2021. The 2020 census was held on April 1, 2020. \"World Economic Outlook Database (April 2026 Edition)\". www.imf.org. International Monetary Fund"
+      ],
+      "report": "# Deep Research Report: wiki\n\n*Generated by ZyroChat Deep Research Engine on September 18, 2026*\n\n---\n\n## 1. Executive Summary\nThis structured report synthesizes multi-source organic web research regarding **wiki**. The analysis consolidates market trends, competitive positioning, and empirical observations gathered across 9 verified web sources.\n\n---\n\n## 2. Key Findings\n- as the market rallied—not as the market declined. Additionally, the aggregate size of this participant&#039;s orders was not known to other market participants\n- \"Willow Cove – Microarchitectures – Intel – Wiki Chip\". Wiki Chip. Archived from the original on January 24, 2026 . Retrieved October 23, 2020. Cutress, Ian;\n- volunteers, known as Wikipedians, through open collaboration and the wiki software Media Wiki . Founded by Jimmy Wales and Larry Sanger in 2001, Wikipedia has\n- Time 100 Greatest NHL Players Australian rugby league&#039;s 100 greatest players Big Three (tennis) Comparison of top chess players throughout history FIFA\n- ICS, which would notably exclude hardware navigation keys . Android blog Rootz Wiki released photos in August 2011 showing a Nexus S running a build of ICS\n- compare players between different eras is made more difficult when inflation or deflation are present (see also Comparison of top chess players throughout\n\n---\n\n## 3. Detailed Analysis\nThe landscape surrounding **wiki** reflects rapid developments in technology integration, customer demand, and regulatory considerations:\n- **Market Growth & Velocity**: Current observations indicate active competition among established incumbents and emerging regional entrants.\n- **Strategic Vectors**: Operational efficiency, localized feature differentiation, and customer retention mechanisms serve as primary competitive moats.\n- **Technology & Infrastructure**: Advanced automation, cloud-native deployments, and AI-assisted workflows dominate operational investments.\n\n---\n\n## 4. Competitive & Strategic Matrix\n\n| Dimension | Leading Incumbents | Challengers / Emerging | Market Impact |\n| :--- | :--- | :--- | :--- |\n| **Market Share** | High brand recall, enterprise contracts | High growth, viral customer acquisition | Fast consolidation |\n| **Product Velocity** | Comprehensive feature suites | Hyper-specialized niche workflows | Continuous iteration |\n| **Monetization** | Annual contracts, tiered tiers | Freemium, pay-per-usage pricing | Margin pressure |\n\n---\n\n## 5. Verified Sources & Citations\n[1] [2010 flash crash](https://en.wikipedia.org/wiki/2010_flash_crash)\n> \"as the market rallied—not as the market declined. Additionally, the aggregate size of this participant&#039;s orders was not known to other market participants...\"\n\n[2] [Intel Core](https://en.wikipedia.org/wiki/Intel_Core)\n> \"\"Willow Cove – Microarchitectures – Intel – Wiki Chip\". Wiki Chip. Archived from the original on January 24, 2026 . Retrieved October 23, 2020. Cutress, Ian;...\"\n\n[3] [Wikipedia](https://en.wikipedia.org/wiki/Wikipedia)\n> \"volunteers, known as Wikipedians, through open collaboration and the wiki software Media Wiki . Founded by Jimmy Wales and Larry Sanger in 2001, Wikipedia has...\"\n\n[4] [List of sports figures considered the greatest](https://en.wikipedia.org/wiki/List_of_sports_figures_considered_the_greatest)\n> \"Time 100 Greatest NHL Players Australian rugby league&#039;s 100 greatest players Big Three (tennis) Comparison of top chess players throughout history FIFA...\"\n\n[5] [Android Ice Cream Sandwich](https://en.wikipedia.org/wiki/Android_Ice_Cream_Sandwich)\n> \"ICS, which would notably exclude hardware navigation keys . Android blog Rootz Wiki released photos in August 2011 showing a Nexus S running a build of ICS...\"\n\n[6] [Elo rating system](https://en.wikipedia.org/wiki/Elo_rating_system)\n> \"compare players between different eras is made more difficult when inflation or deflation are present (see also Comparison of top chess players throughout...\"\n\n[7] [Nod-Krai](https://en.wikipedia.org/wiki/Nod-Krai)\n> \"True “Wealth Code” of the ACG World?]. wuhu动画人空间 (in Chinese). September 14, 2025. Retrieved June 9, 2026 – via Weixin. Nod-Krai on Genshin Impact Wiki...\"\n\n[8] [American Enterprise Institute](https://en.wikipedia.org/wiki/American_Enterprise_Institute)\n> \"arguing that environmental dangers were unproven. In an essay from the AEI outlook series of 2007, the authors discuss the Kyoto Protocol and state that the...\"\n\n[9] [United States](https://en.wikipedia.org/wiki/United_States)\n> \"April 26, 2021. The 2020 census was held on April 1, 2020. \"World Economic Outlook Database (April 2026 Edition)\". www.imf.org. International Monetary Fund...\"\n\n---\n\n## 6. Limitations & Methodological Constraints\n- **Search Freshness**: Relies upon indexed search engine results and publicly accessible web documentation.\n- **Private Entity Data**: Financial figures and valuation multiples for private organizations reflect publicly reported estimates and news disclosures.\n- **Regional Variance**: Market dynamics may vary across regional sub-markets.\n",
+      "progress": 100,
+      "createdAt": 1789751302521,
+      "updatedAt": 1789751317103
+    }
+  ],
+  "usage_events": [
+    {
+      "id": "use-1",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "type": "chat",
+      "model": "openrouter/free",
+      "inputTokens": 350,
+      "outputTokens": 420,
+      "estimatedCost": 0,
+      "timestamp": 1789683283775
+    },
+    {
+      "id": "use-2",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "type": "research",
+      "model": "openrouter/free",
+      "inputTokens": 1200,
+      "outputTokens": 1800,
+      "estimatedCost": 0.0015,
+      "timestamp": 1789694083775
+    },
+    {
+      "id": "usag-d60eefe9-0c03-4e7f-af9d-ef6b04dcc423",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "type": "research",
+      "model": "openrouter/free",
+      "inputTokens": 20,
+      "outputTokens": 5049,
+      "estimatedCost": 0.002,
+      "timestamp": 1789751317108,
+      "createdAt": 1789751317108,
+      "updatedAt": 1789751317108
+    }
+  ],
+  "audit_logs": [
+    {
+      "id": "aud-1",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "action": "workspace_created",
+      "targetType": "workspace",
+      "targetId": "ws-default",
+      "details": {
+        "name": "Main Workspace"
+      },
+      "ip": "127.0.0.1",
+      "timestamp": 1789442083775
+    },
+    {
+      "id": "aud-2",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "action": "connector_connected",
+      "targetType": "connector",
+      "targetId": "conn-github",
+      "details": {
+        "provider": "github"
+      },
+      "ip": "127.0.0.1",
+      "timestamp": 1789528483775
+    },
+    {
+      "id": "audi-6d2b6d5c-ebe5-49c4-ba41-243d0dde367f",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "action": "connector_disconnected",
+      "targetType": "connector",
+      "targetId": "gmail",
+      "details": {
+        "provider": "gmail"
+      },
+      "ip": "::1",
+      "timestamp": 1789749742659,
+      "createdAt": 1789749742659,
+      "updatedAt": 1789749742659
+    },
+    {
+      "id": "audi-531e2ae6-e39c-497d-b378-fc3663a23261",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "action": "connector_connected",
+      "targetType": "connector",
+      "targetId": "gmail",
+      "details": {
+        "provider": "gmail"
+      },
+      "ip": "::1",
+      "timestamp": 1789749750748,
+      "createdAt": 1789749750748,
+      "updatedAt": 1789749750748
+    },
+    {
+      "id": "audi-c0e1044d-78cd-4f7c-93a5-bfc5eac0ffba",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "action": "workflow_executed",
+      "targetType": "workflow",
+      "targetId": "wf-market-brief",
+      "details": {
+        "success": true
+      },
+      "ip": "::1",
+      "timestamp": 1789749986309,
+      "createdAt": 1789749986309,
+      "updatedAt": 1789749986309
+    },
+    {
+      "id": "audi-c591aaef-107e-4470-a162-5144ed351b74",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "action": "account_suspended",
+      "targetType": "user",
+      "targetId": "usr-member-1",
+      "details": {
+        "status": "suspended"
+      },
+      "ip": "::1",
+      "timestamp": 1789751250057,
+      "createdAt": 1789751250057,
+      "updatedAt": 1789751250057
+    },
+    {
+      "id": "audi-c02321cf-9785-4f89-98bf-bb639ea7ee62",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "action": "account_restored",
+      "targetType": "user",
+      "targetId": "usr-member-1",
+      "details": {
+        "status": "active"
+      },
+      "ip": "::1",
+      "timestamp": 1789751262019,
+      "createdAt": 1789751262019,
+      "updatedAt": 1789751262019
+    },
+    {
+      "id": "audi-2f02a992-9847-4125-a483-ca3eaedc0a50",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "action": "workflow_executed",
+      "targetType": "workflow",
+      "targetId": "wf-market-brief",
+      "details": {
+        "success": true
+      },
+      "ip": "::1",
+      "timestamp": 1789751350139,
+      "createdAt": 1789751350139,
+      "updatedAt": 1789751350139
+    },
+    {
+      "id": "audi-bb969db4-49db-48cf-a463-ae3e7888809b",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "action": "workflow_executed",
+      "targetType": "workflow",
+      "targetId": "wf-market-brief",
+      "details": {
+        "success": true
+      },
+      "ip": "::1",
+      "timestamp": 1789751369092,
+      "createdAt": 1789751369092,
+      "updatedAt": 1789751369092
+    },
+    {
+      "id": "audi-1deb96d3-0244-45b8-9c9c-29de83cfe6a2",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "action": "workflow_executed",
+      "targetType": "workflow",
+      "targetId": "work-beb74115-c725-420f-b2fb-539bb4ddbc40",
+      "details": {
+        "success": true
+      },
+      "ip": "::1",
+      "timestamp": 1789751388959,
+      "createdAt": 1789751388959,
+      "updatedAt": 1789751388959
+    },
+    {
+      "id": "audi-7d858ca9-3399-43bc-a052-02cdf0a90a02",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "action": "artifact_created",
+      "targetType": "artifact",
+      "targetId": "art-1789816152090-wrkd9n",
+      "details": {
+        "filename": "dataset.csv"
+      },
+      "ip": "::1",
+      "timestamp": 1789816153857,
+      "createdAt": 1789816153857,
+      "updatedAt": 1789816153857
+    },
+    {
+      "id": "audi-21d84f2e-c0d0-4f6a-a26f-c82d05c0d95a",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "action": "artifact_created",
+      "targetType": "artifact",
+      "targetId": "art-test-1789816710793",
+      "details": {
+        "filename": "auth.js"
+      },
+      "ip": "127.0.0.1",
+      "timestamp": 1789816710839,
+      "createdAt": 1789816710839,
+      "updatedAt": 1789816710839
+    }
+  ],
+  "feedback": [
+    {
+      "id": "feed-ebf3879a-43a3-4264-a3a0-0ff1588bd650",
+      "userId": "usr-admin",
+      "conversationId": "test-conv-1",
+      "messageIndex": 1,
+      "rating": 1,
+      "category": "Accuracy",
+      "comment": "Great response!",
+      "createdAt": 1789802347956,
+      "updatedAt": 1789802347956
+    },
+    {
+      "id": "feed-7836b431-8642-4ada-a750-562902c4920e",
+      "userId": "usr-admin",
+      "conversationId": "test-conv-1",
+      "messageIndex": 1,
+      "rating": 1,
+      "category": "Accuracy",
+      "comment": "Great response!",
+      "createdAt": 1789802548175,
+      "updatedAt": 1789802548175
+    },
+    {
+      "id": "feed-8d5d668e-45a2-4071-8215-b924991929cb",
+      "userId": "usr-admin",
+      "conversationId": "test-conv-1",
+      "messageIndex": 1,
+      "rating": 1,
+      "category": "Accuracy",
+      "comment": "Great response!",
+      "createdAt": 1789802651107,
+      "updatedAt": 1789802651107
+    },
+    {
+      "id": "feed-2640160d-7540-48e8-b662-9d9260d29e07",
+      "userId": "usr-admin",
+      "conversationId": "test-conv-1",
+      "messageIndex": 1,
+      "rating": 1,
+      "category": "Accuracy",
+      "comment": "Great response!",
+      "createdAt": 1789816710746,
+      "updatedAt": 1789816710746
+    }
+  ],
+  "system_errors": [],
+  "artifacts": [
+    {
+      "id": "art-1789816152090-wrkd9n",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "title": "dataset.csv",
+      "filename": "dataset.csv",
+      "type": "data",
+      "content": "S.No,Action,Domain Name,DMCA,Server,Server IP,Comments,Category,Tags,DNS,SSL,Server Type,Load Balancing,Domain Registrar\n1,\"<a href=\"\"edit-domain.php?editid=640\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=640\"\" onclick=\"\"return confirm('Do you really want to delete this zooqle.co domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",zooqle.co,\" no dmca\",usesweet2 safe,18.190.51.38,Working,Uncategorized,,done,done,Primary,No,pananames\n2,\"<a href=\"\"edit-domain.php?editid=639\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=639\"\" onclick=\"\"return confirm('Do you really want to delete this tor.tornetwork.co domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",tor.tornetwork.co,\" no dmca\",aws ashfand 3,3.129.180.186,working,Uncategorized,,done,done,Primary,No,GoDaddy\n3,\"<a href=\"\"edit-domain.php?editid=638\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=638\"\" onclick=\"\"return confirm('Do you really want to delete this dexos.app domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",dexos.app,\" no dmca\",usesweet2 safe,18.190.51.38,\"working , Codebase doesn't exist.\",Uncategorized,,done,done,Primary,No,GoDaddy\n4,\"<a href=\"\"edit-domain.php?editid=637\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=637\"\" onclick=\"\"return confirm('Do you really want to delete this muteplus.com domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",muteplus.com,\" no dmca\",usesweet2,3.132.208.69,working,Uncategorized,,done,done,Primary,No,GoDaddy\n5,\"<a href=\"\"edit-domain.php?editid=636\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=636\"\" onclick=\"\"return confirm('Do you really want to delete this galantis.co domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",galantis.co,\" no dmca\",\"Cody server AWS\",3.142.129.62,working,Uncategorized,,done,done,Primary,No,godaddy\n6,\"<a href=\"\"edit-domain.php?editid=635\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=635\"\" onclick=\"\"return confirm('Do you really want to delete this runpointcfo.com domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",runpointcfo.com,\" no dmca\",b,,not working,Uncategorized,,done,done,Primary,No,godaddy\n7,\"<a href=\"\"edit-domain.php?editid=634\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=634\"\" onclick=\"\"return confirm('Do you really want to delete this darkbert.io domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",darkbert.io,\" no dmca\",b,,show Forbidden,Uncategorized,,done,done,Primary,No,godaddy\n8,\"<a href=\"\"edit-domain.php?editid=633\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=633\"\" onclick=\"\"return confirm('Do you really want to delete this memorymd.net domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",memorymd.net,\" no dmca\",usesweet2 safe,18.190.51.38,working,Uncategorized,,done,done,Primary,No,godaddy\n9,\"<a href=\"\"edit-domain.php?editid=632\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=632\"\" onclick=\"\"return confirm('Do you really want to delete this kickasstorrents.cc domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",kickasstorrents.cc,\" no dmca\",incognite,23.137.248.128,,Uncategorized,,,Secondary,Yes,Njalla\n10,\"<a href=\"\"edit-domain.php?editid=631\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=631\"\" onclick=\"\"return confirm('Do you really want to delete this piratebay.city domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",piratebay.city,\" no dmca\",incognite,23.137.248.128,,Uncategorized,,,Secondary,Yes,Njalla\n11,\"<a href=\"\"edit-domain.php?editid=630\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=630\"\" onclick=\"\"return confirm('Do you really want to delete this torsearch.io domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",torsearch.io,\" no dmca\",incognite,23.137.248.128,,Uncategorized,,,Secondary,Yes,godaddy\n12,\"<a href=\"\"edit-domain.php?editid=629\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=629\"\" onclick=\"\"return confirm('Do you really want to delete this OnionLand.io domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",OnionLand.io,\" no dmca\",incognite,23.137.248.128,,Uncategorized,,,Secondary,Yes,godaddy\n13,\"<a href=\"\"edit-domain.php?editid=628\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=628\"\" onclick=\"\"return confirm('Do you really want to delete this browsly.io domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",browsly.io,\" no dmca\",usesweet2 safe,18.190.51.38,working,Uncategorized,,done,done,Primary,No,godaddy\n14,\"<a href=\"\"edit-domain.php?editid=627\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=627\"\" onclick=\"\"return confirm('Do you really want to delete this autopista.org domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",autopista.org,\" no dmca\",usesweet2 safe,18.190.51.38,\"working\",Uncategorized,,done,not done,Primary,No,godaddy\n15,\"<a href=\"\"edit-domain.php?editid=626\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=626\"\" onclick=\"\"return confirm('Do you really want to delete this findtor.co domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",findtor.co,\" no dmca\",usesweet2 safe,18.190.51.38,working,Uncategorized,,done,done,Primary,No,godaddy\n16,\"<a href=\"\"edit-domain.php?editid=625\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=625\"\" onclick=\"\"return confirm('Do you really want to delete this audy.io domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",audy.io,\" no dmca\",\"Cody server AWS\",3.142.129.62,working,Uncategorized,,done,done,Primary,No,godaddy\n17,\"<a href=\"\"edit-domain.php?editid=624\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=624\"\" onclick=\"\"return confirm('Do you really want to delete this findtor.net domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",findtor.net,\" no dmca\",p6,199.231.235.102,working,Uncategorized,,done,done,Primary,No,godaddy\n18,\"<a href=\"\"edit-domain.php?editid=623\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=623\"\" onclick=\"\"return confirm('Do you really want to delete this 4get.duckdns.org domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",4get.duckdns.org,\" no dmca\",p5,199.231.235.27,\"working | [https://4get.duckdns.org/api/v1/web?s=pankaj](https://4get.duckdns.org/api/v1/web?s=pankaj)\",Uncategorized,,done,done,Primary,No,Gandi sas\n19,\"<a href=\"\"edit-domain.php?editid=622\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=622\"\" onclick=\"\"return confirm('Do you really want to delete this limetorrent.store domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",limetorrent.store,,p2,121.127.33.20,,Uncategorized,,,Secondary,Yes,namecheap\n20,\"<a href=\"\"edit-domain.php?editid=621\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=621\"\" onclick=\"\"return confirm('Do you really want to delete this limetorrent.store domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",limetorrent.store,\" no dmca\",n2,185.193.125.181,working,Uncategorized,,done,done,Primary,Yes,NameCheap\n21,\"<a href=\"\"edit-domain.php?editid=620\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=620\"\" onclick=\"\"return confirm('Do you really want to delete this onionlandsearchengine.com domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",onionlandsearchengine.com,\" no dmca\",p4_new,199.231.235.196,\"Not working , Codebase doesn't exist.\",Uncategorized,,done,done,Primary,No,godaddy\n22,\"<a href=\"\"edit-domain.php?editid=619\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=619\"\" onclick=\"\"return confirm('Do you really want to delete this onionlandsearchengine.co domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",onionlandsearchengine.co,\" no dmca\",p4_new,199.231.235.196,\"Not working , Codebase doesn't exist.\",Uncategorized,,done,done,Primary,No,godaddy\n23,\"<a href=\"\"edit-domain.php?editid=618\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=618\"\" onclick=\"\"return confirm('Do you really want to delete this exceldemy.net domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",exceldemy.net,\" no dmca\",h2,,,not working,Uncategorized,,not done,not done,Primary,No,Namecheap(osc)\n24,\"<a href=\"\"edit-domain.php?editid=617\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=617\"\" onclick=\"\"return confirm('Do you really want to delete this ahmia.net domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",ahmia.net,\" no dmca\",p6,199.231.235.102,working,Uncategorized,,done,done,Primary,No,pananames (Dex)\n25,\"<a href=\"\"edit-domain.php?editid=616\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=616\"\" onclick=\"\"return confirm('Do you really want to delete this Ahmia.org domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",Ahmia.org,\" no dmca\",p6,199.231.235.102,working,Uncategorized,,done,done,Primary,No,godaddy\n26,\"<a href=\"\"edit-domain.php?editid=615\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=615\"\" onclick=\"\"return confirm('Do you really want to delete this ahmia.io domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",ahmia.io,\" no dmca\",p6,199.231.235.102,working,Uncategorized,,done,done,Primary,No,\"pananames (Dex)\"\n27,\"<a href=\"\"edit-domain.php?editid=610\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=610\"\" onclick=\"\"return confirm('Do you really want to delete this torry.io domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",torry.io,\" no dmca\",api,, \"[https://www.torry.io/search/searchappend.php?page=1&ser=test](https://www.torry.io/search/searchappend.php?page=1&ser=test)\",API,,Primary,No,\n28,\"<a href=\"\"edit-domain.php?editid=608\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=608\"\" onclick=\"\"return confirm('Do you really want to delete this torry.io domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",torry.io,\"https://www.torry.io/reportus/\",\"aws torry.io\",18.224.78.26,working,Uncategorized,,done,done,Primary,No,godaddy\n29,\"<a href=\"\"edit-domain.php?editid=607\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=607\"\" onclick=\"\"return confirm('Do you really want to delete this tordex.to domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",tordex.to,\" no dmca\",\"incognite 2 onion\",104.36.80.64,tordex7qfwytt5otmd7qckflqhbobhyx6vbmoy5wm7u5tsgrgfwz3jqd.onion,Onion,,Primary,No,\n30,\"<a href=\"\"edit-domain.php?editid=606\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=606\"\" onclick=\"\"return confirm('Do you really want to delete this tor66.org domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",tor66.org,\" no dmca\",\"incognite 2 onion\",104.36.80.64,\"[tor66kq6rk6psybb2dciuirzmjsuwdp2zcxsacec6bpx5uzy7bklu5qd.onion](tor66kq6rk6psybb2dciuirzmjsuwdp2zcxsacec6bpx5uzy7bklu5qd.onion)\",Onion,,Primary,No,\n31,\"<a href=\"\"edit-domain.php?editid=605\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=605\"\" onclick=\"\"return confirm('Do you really want to delete this TorLand.org domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",TorLand.org,\" no dmca\",p4_new,199.231.235.196,working,Uncategorized,,done,done,Secondary,No,\"pananames (dex)\"\n32,\"<a href=\"\"edit-domain.php?editid=604\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=604\"\" onclick=\"\"return confirm('",
+      "language": "csv",
+      "sizeBytes": 12144,
+      "lineCount": 33,
+      "version": 1,
+      "createdAt": 1789816153746,
+      "updatedAt": 1789816153746
+    },
+    {
+      "id": "art-test-1789816710793",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "title": "Test Authentication Module",
+      "filename": "auth.js",
+      "type": "code",
+      "content": "function authenticate(user, pass) {\n  // Added password hashing check\n  return user === 'admin' && pass === 'secret';\n}",
+      "language": "javascript",
+      "sizeBytes": 119,
+      "lineCount": 4,
+      "version": 2,
+      "createdAt": 1789816710798,
+      "updatedAt": 1789816710873
+    }
+  ],
+  "artifact_versions": [
+    {
+      "id": "arti-c567df8c-c98a-40c6-bbf0-9a3ee0bf7939",
+      "artifactId": "art-1789816152090-wrkd9n",
+      "userId": "usr-admin",
+      "version": 1,
+      "content": "S.No,Action,Domain Name,DMCA,Server,Server IP,Comments,Category,Tags,DNS,SSL,Server Type,Load Balancing,Domain Registrar\n1,\"<a href=\"\"edit-domain.php?editid=640\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=640\"\" onclick=\"\"return confirm('Do you really want to delete this zooqle.co domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",zooqle.co,\" no dmca\",usesweet2 safe,18.190.51.38,Working,Uncategorized,,done,done,Primary,No,pananames\n2,\"<a href=\"\"edit-domain.php?editid=639\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=639\"\" onclick=\"\"return confirm('Do you really want to delete this tor.tornetwork.co domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",tor.tornetwork.co,\" no dmca\",aws ashfand 3,3.129.180.186,working,Uncategorized,,done,done,Primary,No,GoDaddy\n3,\"<a href=\"\"edit-domain.php?editid=638\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=638\"\" onclick=\"\"return confirm('Do you really want to delete this dexos.app domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",dexos.app,\" no dmca\",usesweet2 safe,18.190.51.38,\"working , Codebase doesn't exist.\",Uncategorized,,done,done,Primary,No,GoDaddy\n4,\"<a href=\"\"edit-domain.php?editid=637\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=637\"\" onclick=\"\"return confirm('Do you really want to delete this muteplus.com domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",muteplus.com,\" no dmca\",usesweet2,3.132.208.69,working,Uncategorized,,done,done,Primary,No,GoDaddy\n5,\"<a href=\"\"edit-domain.php?editid=636\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=636\"\" onclick=\"\"return confirm('Do you really want to delete this galantis.co domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",galantis.co,\" no dmca\",\"Cody server AWS\",3.142.129.62,working,Uncategorized,,done,done,Primary,No,godaddy\n6,\"<a href=\"\"edit-domain.php?editid=635\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=635\"\" onclick=\"\"return confirm('Do you really want to delete this runpointcfo.com domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",runpointcfo.com,\" no dmca\",b,,not working,Uncategorized,,done,done,Primary,No,godaddy\n7,\"<a href=\"\"edit-domain.php?editid=634\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=634\"\" onclick=\"\"return confirm('Do you really want to delete this darkbert.io domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",darkbert.io,\" no dmca\",b,,show Forbidden,Uncategorized,,done,done,Primary,No,godaddy\n8,\"<a href=\"\"edit-domain.php?editid=633\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=633\"\" onclick=\"\"return confirm('Do you really want to delete this memorymd.net domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",memorymd.net,\" no dmca\",usesweet2 safe,18.190.51.38,working,Uncategorized,,done,done,Primary,No,godaddy\n9,\"<a href=\"\"edit-domain.php?editid=632\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=632\"\" onclick=\"\"return confirm('Do you really want to delete this kickasstorrents.cc domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",kickasstorrents.cc,\" no dmca\",incognite,23.137.248.128,,Uncategorized,,,Secondary,Yes,Njalla\n10,\"<a href=\"\"edit-domain.php?editid=631\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=631\"\" onclick=\"\"return confirm('Do you really want to delete this piratebay.city domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",piratebay.city,\" no dmca\",incognite,23.137.248.128,,Uncategorized,,,Secondary,Yes,Njalla\n11,\"<a href=\"\"edit-domain.php?editid=630\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=630\"\" onclick=\"\"return confirm('Do you really want to delete this torsearch.io domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",torsearch.io,\" no dmca\",incognite,23.137.248.128,,Uncategorized,,,Secondary,Yes,godaddy\n12,\"<a href=\"\"edit-domain.php?editid=629\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=629\"\" onclick=\"\"return confirm('Do you really want to delete this OnionLand.io domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",OnionLand.io,\" no dmca\",incognite,23.137.248.128,,Uncategorized,,,Secondary,Yes,godaddy\n13,\"<a href=\"\"edit-domain.php?editid=628\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=628\"\" onclick=\"\"return confirm('Do you really want to delete this browsly.io domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",browsly.io,\" no dmca\",usesweet2 safe,18.190.51.38,working,Uncategorized,,done,done,Primary,No,godaddy\n14,\"<a href=\"\"edit-domain.php?editid=627\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=627\"\" onclick=\"\"return confirm('Do you really want to delete this autopista.org domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",autopista.org,\" no dmca\",usesweet2 safe,18.190.51.38,\"working\",Uncategorized,,done,not done,Primary,No,godaddy\n15,\"<a href=\"\"edit-domain.php?editid=626\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=626\"\" onclick=\"\"return confirm('Do you really want to delete this findtor.co domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",findtor.co,\" no dmca\",usesweet2 safe,18.190.51.38,working,Uncategorized,,done,done,Primary,No,godaddy\n16,\"<a href=\"\"edit-domain.php?editid=625\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=625\"\" onclick=\"\"return confirm('Do you really want to delete this audy.io domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",audy.io,\" no dmca\",\"Cody server AWS\",3.142.129.62,working,Uncategorized,,done,done,Primary,No,godaddy\n17,\"<a href=\"\"edit-domain.php?editid=624\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=624\"\" onclick=\"\"return confirm('Do you really want to delete this findtor.net domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",findtor.net,\" no dmca\",p6,199.231.235.102,working,Uncategorized,,done,done,Primary,No,godaddy\n18,\"<a href=\"\"edit-domain.php?editid=623\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=623\"\" onclick=\"\"return confirm('Do you really want to delete this 4get.duckdns.org domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",4get.duckdns.org,\" no dmca\",p5,199.231.235.27,\"working | [https://4get.duckdns.org/api/v1/web?s=pankaj](https://4get.duckdns.org/api/v1/web?s=pankaj)\",Uncategorized,,done,done,Primary,No,Gandi sas\n19,\"<a href=\"\"edit-domain.php?editid=622\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=622\"\" onclick=\"\"return confirm('Do you really want to delete this limetorrent.store domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",limetorrent.store,,p2,121.127.33.20,,Uncategorized,,,Secondary,Yes,namecheap\n20,\"<a href=\"\"edit-domain.php?editid=621\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=621\"\" onclick=\"\"return confirm('Do you really want to delete this limetorrent.store domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",limetorrent.store,\" no dmca\",n2,185.193.125.181,working,Uncategorized,,done,done,Primary,Yes,NameCheap\n21,\"<a href=\"\"edit-domain.php?editid=620\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=620\"\" onclick=\"\"return confirm('Do you really want to delete this onionlandsearchengine.com domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",onionlandsearchengine.com,\" no dmca\",p4_new,199.231.235.196,\"Not working , Codebase doesn't exist.\",Uncategorized,,done,done,Primary,No,godaddy\n22,\"<a href=\"\"edit-domain.php?editid=619\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=619\"\" onclick=\"\"return confirm('Do you really want to delete this onionlandsearchengine.co domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",onionlandsearchengine.co,\" no dmca\",p4_new,199.231.235.196,\"Not working , Codebase doesn't exist.\",Uncategorized,,done,done,Primary,No,godaddy\n23,\"<a href=\"\"edit-domain.php?editid=618\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=618\"\" onclick=\"\"return confirm('Do you really want to delete this exceldemy.net domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",exceldemy.net,\" no dmca\",h2,,,not working,Uncategorized,,not done,not done,Primary,No,Namecheap(osc)\n24,\"<a href=\"\"edit-domain.php?editid=617\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=617\"\" onclick=\"\"return confirm('Do you really want to delete this ahmia.net domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",ahmia.net,\" no dmca\",p6,199.231.235.102,working,Uncategorized,,done,done,Primary,No,pananames (Dex)\n25,\"<a href=\"\"edit-domain.php?editid=616\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=616\"\" onclick=\"\"return confirm('Do you really want to delete this Ahmia.org domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",Ahmia.org,\" no dmca\",p6,199.231.235.102,working,Uncategorized,,done,done,Primary,No,godaddy\n26,\"<a href=\"\"edit-domain.php?editid=615\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=615\"\" onclick=\"\"return confirm('Do you really want to delete this ahmia.io domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",ahmia.io,\" no dmca\",p6,199.231.235.102,working,Uncategorized,,done,done,Primary,No,\"pananames (Dex)\"\n27,\"<a href=\"\"edit-domain.php?editid=610\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=610\"\" onclick=\"\"return confirm('Do you really want to delete this torry.io domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",torry.io,\" no dmca\",api,, \"[https://www.torry.io/search/searchappend.php?page=1&ser=test](https://www.torry.io/search/searchappend.php?page=1&ser=test)\",API,,Primary,No,\n28,\"<a href=\"\"edit-domain.php?editid=608\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=608\"\" onclick=\"\"return confirm('Do you really want to delete this torry.io domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",torry.io,\"https://www.torry.io/reportus/\",\"aws torry.io\",18.224.78.26,working,Uncategorized,,done,done,Primary,No,godaddy\n29,\"<a href=\"\"edit-domain.php?editid=607\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=607\"\" onclick=\"\"return confirm('Do you really want to delete this tordex.to domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",tordex.to,\" no dmca\",\"incognite 2 onion\",104.36.80.64,tordex7qfwytt5otmd7qckflqhbobhyx6vbmoy5wm7u5tsgrgfwz3jqd.onion,Onion,,Primary,No,\n30,\"<a href=\"\"edit-domain.php?editid=606\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=606\"\" onclick=\"\"return confirm('Do you really want to delete this tor66.org domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",tor66.org,\" no dmca\",\"incognite 2 onion\",104.36.80.64,\"[tor66kq6rk6psybb2dciuirzmjsuwdp2zcxsacec6bpx5uzy7bklu5qd.onion](tor66kq6rk6psybb2dciuirzmjsuwdp2zcxsacec6bpx5uzy7bklu5qd.onion)\",Onion,,Primary,No,\n31,\"<a href=\"\"edit-domain.php?editid=605\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=605\"\" onclick=\"\"return confirm('Do you really want to delete this TorLand.org domain?');\"\" class=\"\"btn btn-sm btn-outline-danger\"\">Delete</a>\",TorLand.org,\" no dmca\",p4_new,199.231.235.196,working,Uncategorized,,done,done,Secondary,No,\"pananames (dex)\"\n32,\"<a href=\"\"edit-domain.php?editid=604\"\" class=\"\"btn btn-sm btn-outline-info\"\">Edit</a> | <a href=\"\"delete-domain.php?delid=604\"\" onclick=\"\"return confirm('",
+      "summary": "Updated artifact",
+      "lineCount": 33,
+      "sizeBytes": 12144,
+      "createdAt": 1789816153746,
+      "updatedAt": 1789816153789
+    },
+    {
+      "id": "arti-972a325b-8da5-429b-88e4-cc915fcd29da",
+      "artifactId": "art-test-1789816710793",
+      "userId": "usr-admin",
+      "version": 1,
+      "content": "function authenticate(user, pass) {\n  return user === 'admin';\n}",
+      "summary": "Initial commit",
+      "lineCount": 3,
+      "sizeBytes": 64,
+      "createdAt": 1789816710798,
+      "updatedAt": 1789816710824
+    }
+  ]
+}

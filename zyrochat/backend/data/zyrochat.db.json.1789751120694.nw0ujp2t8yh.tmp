@@ -1,0 +1,498 @@
+{
+  "users": [
+    {
+      "id": "usr-admin",
+      "email": "admin@zyrochat.local",
+      "name": "ZyroChat Administrator",
+      "role": "admin",
+      "status": "active",
+      "passwordHash": "zyrochat_admin_seed",
+      "createdAt": 1789701283775,
+      "updatedAt": 1789701283775
+    },
+    {
+      "id": "usr-member-1",
+      "email": "alex@zyrochat.local",
+      "name": "Alex Rivera",
+      "role": "member",
+      "status": "active",
+      "passwordHash": "zyrochat_member_seed",
+      "createdAt": 1789701283775,
+      "updatedAt": 1789701283775
+    }
+  ],
+  "workspaces": [
+    {
+      "id": "ws-default",
+      "name": "Main Workspace",
+      "description": "Default collaborative enterprise workspace for ZyroChat.",
+      "ownerId": "usr-admin",
+      "isDefault": true,
+      "createdAt": 1789701283775,
+      "updatedAt": 1789701283775
+    }
+  ],
+  "workspace_members": [
+    {
+      "id": "wsm-1",
+      "workspaceId": "ws-default",
+      "userId": "usr-admin",
+      "role": "owner",
+      "createdAt": 1789701283775
+    },
+    {
+      "id": "wsm-2",
+      "workspaceId": "ws-default",
+      "userId": "usr-member-1",
+      "role": "member",
+      "createdAt": 1789701283775
+    }
+  ],
+  "projects": [],
+  "conversations": [
+    {
+      "id": "conv-e2cc973a-1678-47ac-a359-4b1dd440a9fe",
+      "workspaceId": "ws-default",
+      "userId": "usr-admin",
+      "title": "Branch: Wiki (msg 6)",
+      "parentConversationId": "local-1789751120631",
+      "branchedFromMessageId": "msg-idx-5",
+      "branchedAtIndex": 5,
+      "createdAt": 1789751120651,
+      "updatedAt": 1789751120651
+    }
+  ],
+  "messages": [
+    {
+      "id": "mess-51ff1f40-d02e-4007-a4ae-512fd49d8702",
+      "conversationId": "conv-e2cc973a-1678-47ac-a359-4b1dd440a9fe",
+      "role": "user",
+      "text": "wiki",
+      "sources": [],
+      "attachments": [],
+      "index": 0,
+      "createdAt": 1789751120672,
+      "updatedAt": 1789751120672
+    },
+    {
+      "id": "mess-9bef9f54-2b0b-40f1-b32a-202caa13ae2e",
+      "conversationId": "conv-e2cc973a-1678-47ac-a359-4b1dd440a9fe",
+      "role": "bot",
+      "text": "# Wiki\n\n## Definition\nA **wiki** is a collaborative website or platform that allows users to create, edit, and manage content collectively through a web browser. The core principle is **open collaboration** — anyone (or authorized users) can contribute and modify content directly.\n\n## Key Characteristics\n\n| Feature | Description |\n|---|---|\n| **Collaborative Editing** | Multiple users can edit pages simultaneously or asynchronously |\n| **Version History** | All changes are tracked, allowing rollback to previous versions |\n| **Hyperlinking** | Pages are interconnected through wiki-links, creating a knowledge graph |\n| **Simple Markup** | Content is typically created using lightweight formatting (not full HTML) |\n| **Access Control** | Ranges from fully open (public) to restricted (private/enterprise) |\n\n## Brief History\n- **1995** — Ward Cunningham created the first wiki, **WikiWikiWeb**, for the Portland Pattern Repository. The term \"wiki\" comes from the Hawaiian word meaning *\"quick.\"*\n- **2001** — **Wikipedia** launched, becoming the largest and most well-known wiki in existence.\n- **2000s–present** — Wikis evolved into enterprise tools (Confluence, Notion, MediaWiki deployments) and knowledge management systems.\n\n## Notable Wiki Platforms\n\n- **Wikipedia** — The largest public wiki, a free encyclopedia with 60+ million articles across 300+ languages.\n- **MediaWiki** — Open-source wiki software powering Wikipedia and many other wikis.\n- **Confluence** — Atlassian's enterprise wiki for team documentation.\n- **Notion** — A modern all-in-one workspace blending wiki, database, and project management features.\n- **Fandom (formerly Wikia)** — Hosting community-driven wikis for pop culture, gaming, and more.\n- **GitBook / BookStack** — Developer-oriented and self-hosted wiki solutions.\n\n## Common Use Cases\n\n1. **Knowledge Bases** — Internal company documentation, FAQs, SOPs\n2. **Collaborative Research** — Academic teams sharing references and notes\n3. **Community Encyclopedias** — Fan wikis, open-source project docs\n4. **Project Management** — Sprint planning, requirement tracking\n5. **Education** — Classroom collaboration, shared learning resources\n\n## Pros & Cons\n\n| ✅ Advantages | ⚠️ Challenges |\n|---|---|\n| Easy to create and edit | Vulnerability to vandalism or inaccurate edits |\n| Rapid knowledge sharing | Quality control can be difficult at scale |\n| Centralized information | Information architecture can degrade without maintenance |\n| Transparent version history | Privacy/confidentiality requires careful access management |\n\n---\n\nIf you'd like me to **create a wiki document**, **set up a wiki structure** for a specific topic, or **compare wiki platforms** for your use case, just let me know.",
+      "sources": [],
+      "attachments": [],
+      "index": 1,
+      "createdAt": 1789751120682,
+      "updatedAt": 1789751120682
+    },
+    {
+      "id": "mess-ad41913c-2ac3-4d5c-8d55-7042f14550c5",
+      "conversationId": "conv-e2cc973a-1678-47ac-a359-4b1dd440a9fe",
+      "role": "user",
+      "text": "hi",
+      "sources": [],
+      "attachments": [],
+      "index": 2,
+      "createdAt": 1789751120693,
+      "updatedAt": 1789751120693
+    }
+  ],
+  "knowledge_bases": [
+    {
+      "id": "kb-company-policy",
+      "workspaceId": "ws-default",
+      "name": "Company Knowledge",
+      "description": "Official policies, onboarding handbook, and engineering architecture documentation.",
+      "category": "Company",
+      "documentCount": 2,
+      "createdAt": 1789528483775,
+      "updatedAt": 1789614883775
+    },
+    {
+      "id": "kb-tech-guidelines",
+      "workspaceId": "ws-default",
+      "name": "Engineering Guidelines",
+      "description": "Coding standards, security checklist, and deployment protocols.",
+      "category": "Project",
+      "documentCount": 1,
+      "createdAt": 1789614883775,
+      "updatedAt": 1789701283775
+    }
+  ],
+  "knowledge_documents": [
+    {
+      "id": "doc-1",
+      "knowledgeBaseId": "kb-company-policy",
+      "title": "Company Security & Remote Work Policy",
+      "fileName": "security_policy_2026.pdf",
+      "fileSize": 245000,
+      "mimeType": "application/pdf",
+      "chunkCount": 3,
+      "isIndexed": true,
+      "createdAt": 1789528483775
+    },
+    {
+      "id": "doc-2",
+      "knowledgeBaseId": "kb-company-policy",
+      "title": "Employee Onboarding & Benefits Guide",
+      "fileName": "employee_handbook.docx",
+      "fileSize": 184000,
+      "mimeType": "application/docx",
+      "chunkCount": 2,
+      "isIndexed": true,
+      "createdAt": 1789614883775
+    },
+    {
+      "id": "doc-3",
+      "knowledgeBaseId": "kb-tech-guidelines",
+      "title": "Engineering Best Practices & TypeScript Protocols",
+      "fileName": "ts_architecture_guidelines.md",
+      "fileSize": 95000,
+      "mimeType": "text/markdown",
+      "chunkCount": 2,
+      "isIndexed": true,
+      "createdAt": 1789701283775
+    }
+  ],
+  "knowledge_chunks": [
+    {
+      "id": "chunk-1-1",
+      "documentId": "doc-1",
+      "knowledgeBaseId": "kb-company-policy",
+      "chunkIndex": 0,
+      "content": "Section 1: Data Protection & Password Policy. All employees must configure multi-factor authentication (MFA) across company portals. Passwords must be at least 14 characters long and rotated every 90 days. Never store credentials in plain text files or shared repositories.",
+      "tokenCount": 46,
+      "pageNumber": 1,
+      "section": "Data Protection & Access",
+      "createdAt": 1789528483775
+    },
+    {
+      "id": "chunk-1-2",
+      "documentId": "doc-1",
+      "knowledgeBaseId": "kb-company-policy",
+      "chunkIndex": 1,
+      "content": "Section 2: Remote Work & Device Security. Workspaces and devices accessing internal company repositories must have disk encryption active (FileVault or BitLocker). Public Wi-Fi connections require the company VPN tunnel at all times.",
+      "tokenCount": 42,
+      "pageNumber": 2,
+      "section": "Remote Connectivity",
+      "createdAt": 1789528483775
+    },
+    {
+      "id": "chunk-2-1",
+      "documentId": "doc-2",
+      "knowledgeBaseId": "kb-company-policy",
+      "chunkIndex": 0,
+      "content": "Benefits & Leave Structure: Full-time employees receive 24 days paid time off annually, along with 10 statutory regional holidays. Health insurance includes dental, vision, and comprehensive emergency coverage starting on day one.",
+      "tokenCount": 41,
+      "pageNumber": 4,
+      "section": "Time Off & Healthcare",
+      "createdAt": 1789614883775
+    },
+    {
+      "id": "chunk-3-1",
+      "documentId": "doc-3",
+      "knowledgeBaseId": "kb-tech-guidelines",
+      "chunkIndex": 0,
+      "content": "TypeScript Architecture: Strict typing is mandatory across all frontend and backend services. The use of 'any' is forbidden without explicit peer review. Components must handle loading, error, and empty boundary states gracefully.",
+      "tokenCount": 40,
+      "pageNumber": 1,
+      "section": "Coding Standards",
+      "createdAt": 1789701283775
+    }
+  ],
+  "workflows": [
+    {
+      "id": "wf-market-brief",
+      "workspaceId": "ws-default",
+      "name": "Market Research & Executive Briefing",
+      "description": "Takes an industry query, conducts organic web research, synthesizes competitive findings, and outputs a formatted markdown brief.",
+      "nodes": [
+        {
+          "id": "node-1",
+          "type": "Input",
+          "title": "Target Topic",
+          "config": {
+            "defaultValue": "Indian EdTech Market 2026"
+          }
+        },
+        {
+          "id": "node-2",
+          "type": "WebSearch",
+          "title": "Web Research",
+          "config": {
+            "maxResults": 5
+          }
+        },
+        {
+          "id": "node-3",
+          "type": "AI",
+          "title": "Synthesize Findings",
+          "config": {
+            "promptTemplate": "Summarize key market trends and competitors from the search results."
+          }
+        },
+        {
+          "id": "node-4",
+          "type": "Output",
+          "title": "Executive Report",
+          "config": {
+            "format": "markdown"
+          }
+        }
+      ],
+      "edges": [
+        {
+          "from": "node-1",
+          "to": "node-2"
+        },
+        {
+          "from": "node-2",
+          "to": "node-3"
+        },
+        {
+          "from": "node-3",
+          "to": "node-4"
+        }
+      ],
+      "status": "active",
+      "createdBy": "usr-admin",
+      "createdAt": 1789614883775,
+      "updatedAt": 1789701283775
+    }
+  ],
+  "workflow_runs": [
+    {
+      "id": "work-cb7303e7-3e5d-40e2-b63b-746b8bd20c32",
+      "workflowId": "wf-market-brief",
+      "status": "completed",
+      "inputs": {
+        "query": "Electric Vehicle market growth in 2026"
+      },
+      "outputs": "### AI Synthesis Report\n\n**Task**: Summarize key market trends and competitors from the search results.\n\n**Processed Information**:\n[1] \"Physics Wallah\" (wikipedia.org)\nURL: https://en.wikipedia.org/wiki/Physics_Wallah\nSummary: Minted Edtech Unicorn\". Forbes India. Retrieved 3 March 2024. Gupta, Aryaman (7 December 2022). \"PhysicsWallah, the unassuming underdog among ed - tech firms\n\n[2] \"Byju's\" (wikipedia.org)\nURL: https://en.wikipedia.org/wiki/Byju's\nSummary: members of IAMAI&#039;s India EdTech Consortium. In March 2022, it signed a contract with Qatar Investment Authority to establish a new edtech company and an R&D\n\n[3...\n\n*Analysis successfully concluded.*",
+      "logs": [
+        "[2026-09-18T16:46:23.784Z] Workflow \"Market Research & Executive Briefing\" started execution.",
+        "Running Node [Target Topic] (Input)...",
+        "Running Node [Web Research] (WebSearch)...",
+        "WebSearch retrieved 4 sources.",
+        "Running Node [Synthesize Findings] (AI)...",
+        "AI node completed synthesis.",
+        "Running Node [Executive Report] (Output)...",
+        "Output generated: ### AI Synthesis Report\n\n**Task**: Summarize key market trends and competitors f...",
+        "[2026-09-18T16:46:26.302Z] Workflow completed in 2518ms."
+      ],
+      "durationMs": 2518,
+      "createdAt": 1789749986302,
+      "updatedAt": 1789749986302
+    }
+  ],
+  "connectors": [
+    {
+      "id": "conn-gmail",
+      "userId": "usr-admin",
+      "provider": "gmail",
+      "status": "connected",
+      "accountName": "Work Email",
+      "accountEmail": "admin@zyrochat.local",
+      "scopes": [
+        "https://www.googleapis.com/auth/gmail.readonly"
+      ],
+      "metadata": {
+        "lastSync": 1789749750723
+      },
+      "createdAt": 1789442083775,
+      "updatedAt": 1789749750724
+    },
+    {
+      "id": "conn-drive",
+      "userId": "usr-admin",
+      "provider": "drive",
+      "status": "connected",
+      "accountName": "Google Drive Enterprise",
+      "accountEmail": "admin@zyrochat.local",
+      "scopes": [
+        "https://www.googleapis.com/auth/drive.readonly"
+      ],
+      "metadata": {
+        "totalFiles": 28,
+        "lastSync": 1789697683775
+      },
+      "createdAt": 1789442083775,
+      "updatedAt": 1789701283775
+    },
+    {
+      "id": "conn-github",
+      "userId": "usr-admin",
+      "provider": "github",
+      "status": "connected",
+      "accountName": "zyrochat-team",
+      "accountEmail": "dev@zyrochat.local",
+      "scopes": [
+        "repo:read",
+        "read:user"
+      ],
+      "metadata": {
+        "repoCount": 12,
+        "lastSync": 1789700083775
+      },
+      "createdAt": 1789528483775,
+      "updatedAt": 1789701283775
+    },
+    {
+      "id": "conn-slack",
+      "userId": "usr-admin",
+      "provider": "slack",
+      "status": "not_connected",
+      "accountName": "",
+      "accountEmail": "",
+      "scopes": [
+        "channels:read",
+        "channels:history"
+      ],
+      "metadata": {},
+      "createdAt": 1789614883775,
+      "updatedAt": 1789701283775
+    }
+  ],
+  "research_sessions": [
+    {
+      "id": "res-edtech-sample",
+      "userId": "usr-admin",
+      "topic": "Top 10 competitors in the Indian education market",
+      "status": "completed",
+      "plan": [
+        {
+          "query": "top EdTech companies India market share 2026",
+          "status": "completed"
+        },
+        {
+          "query": "Byju PhysicsWallah Unacademy market comparison India",
+          "status": "completed"
+        },
+        {
+          "query": "government initiatives Indian online education technology",
+          "status": "completed"
+        }
+      ],
+      "sources": [
+        {
+          "title": "India EdTech Market Analysis & Competitive Landscape",
+          "url": "https://example.com/reports/india-edtech",
+          "snippet": "Analysis of market consolidation, hybrid tuition models, and valuation metrics across leading Indian learning platforms."
+        },
+        {
+          "title": "National Education Technology Trends & Growth",
+          "url": "https://example.com/trends/education",
+          "snippet": "Government push for digital skilling and regional vernacular education initiatives across tier-2 and tier-3 cities."
+        }
+      ],
+      "findings": [
+        "PhysicsWallah and hybrid coaching centers lead offline-online blended enrollment in 2026.",
+        "Vernacular language learning and vocational skill courses are the fastest-growing market sub-sectors.",
+        "Sustainable unit economics and hybrid offline centers have largely replaced hyper-funded acquisition strategies."
+      ],
+      "report": "# Deep Research Report: Indian Education & EdTech Market\n\n## Executive Summary\nThe Indian education sector in 2026 is characterized by a strong shift toward hybrid omnichannel models, test-preparation consolidation, and regional language skilling.\n\n## Key Competitors\n1. **PhysicsWallah (PW)**: Market leader in affordable hybrid coaching.\n2. **Unacademy**: Dominant in civil services and test preparation.\n3. **Allen Digital**: Premier traditional offline player with strong online reach.\n4. **Vedantu**: K-12 interactive live tutoring.\n5. **upGrad**: Higher education and executive upskilling.\n\n## Limitations\nMarket valuation data is subject to private funding round estimates and evolving regulatory disclosure.",
+      "progress": 100,
+      "createdAt": 1789528483775,
+      "updatedAt": 1789528483775
+    }
+  ],
+  "usage_events": [
+    {
+      "id": "use-1",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "type": "chat",
+      "model": "openrouter/free",
+      "inputTokens": 350,
+      "outputTokens": 420,
+      "estimatedCost": 0,
+      "timestamp": 1789683283775
+    },
+    {
+      "id": "use-2",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "type": "research",
+      "model": "openrouter/free",
+      "inputTokens": 1200,
+      "outputTokens": 1800,
+      "estimatedCost": 0.0015,
+      "timestamp": 1789694083775
+    }
+  ],
+  "audit_logs": [
+    {
+      "id": "aud-1",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "action": "workspace_created",
+      "targetType": "workspace",
+      "targetId": "ws-default",
+      "details": {
+        "name": "Main Workspace"
+      },
+      "ip": "127.0.0.1",
+      "timestamp": 1789442083775
+    },
+    {
+      "id": "aud-2",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "action": "connector_connected",
+      "targetType": "connector",
+      "targetId": "conn-github",
+      "details": {
+        "provider": "github"
+      },
+      "ip": "127.0.0.1",
+      "timestamp": 1789528483775
+    },
+    {
+      "id": "audi-6d2b6d5c-ebe5-49c4-ba41-243d0dde367f",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "action": "connector_disconnected",
+      "targetType": "connector",
+      "targetId": "gmail",
+      "details": {
+        "provider": "gmail"
+      },
+      "ip": "::1",
+      "timestamp": 1789749742659,
+      "createdAt": 1789749742659,
+      "updatedAt": 1789749742659
+    },
+    {
+      "id": "audi-531e2ae6-e39c-497d-b378-fc3663a23261",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "action": "connector_connected",
+      "targetType": "connector",
+      "targetId": "gmail",
+      "details": {
+        "provider": "gmail"
+      },
+      "ip": "::1",
+      "timestamp": 1789749750748,
+      "createdAt": 1789749750748,
+      "updatedAt": 1789749750748
+    },
+    {
+      "id": "audi-c0e1044d-78cd-4f7c-93a5-bfc5eac0ffba",
+      "userId": "usr-admin",
+      "workspaceId": "ws-default",
+      "action": "workflow_executed",
+      "targetType": "workflow",
+      "targetId": "wf-market-brief",
+      "details": {
+        "success": true
+      },
+      "ip": "::1",
+      "timestamp": 1789749986309,
+      "createdAt": 1789749986309,
+      "updatedAt": 1789749986309
+    }
+  ],
+  "feedback": [],
+  "system_errors": []
+}
