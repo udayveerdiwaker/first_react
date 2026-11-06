@@ -266,7 +266,7 @@ export default function ChatBox({
       const plainText = text
         .replace(/```[\s\S]*?```/g, " [Code block omitted] ")
         .replace(/`([^`]+)`/g, "$1")
-        .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1")
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
         .replace(/[#*_~]/g, "");
 
       const utterance = new SpeechSynthesisUtterance(plainText);

@@ -13,7 +13,7 @@ import {
 import { useMemo, useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export const AI_MODES = [
+const AI_MODES = [
   {
     value: "auto",
     label: "Auto",

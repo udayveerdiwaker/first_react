@@ -142,7 +142,9 @@ export async function streamOpenRouterText(
     isStreamFinished = true;
     try {
       reader.releaseLock();
-    } catch {}
+    } catch {
+      // Reader lock may already be released
+    }
   }
 
   // If the model generated reasoning thoughts but no explicit content, use reasoning output

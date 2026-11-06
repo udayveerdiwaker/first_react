@@ -96,7 +96,7 @@ const SENSITIVE_PATTERNS = [
   /password\s*[:=]\s*\S+/i,
   /api[_-]?key\s*[:=]\s*\S+/i,
   /secret\s*[:=]\s*\S+/i,
-  /bearer\s+[a-zA-Z0-9_\-\.]+/i,
+  /bearer\s+[a-zA-Z0-9_\-.]+/i,
   /token\s*[:=]\s*\S+/i,
   /sk-[a-zA-Z0-9]{20,}/i,
   /ghp_[a-zA-Z0-9]{20,}/i,

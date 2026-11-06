@@ -47,7 +47,7 @@ export async function getMcpToolDefinitions(signal?: AbortSignal) {
 
   try {
     response = await fetch(`${BACKEND_URL}/api/mcp/tools`, { signal });
-  } catch (error) {
+  } catch {
     throw new Error(
       `MCP backend is not reachable at ${BACKEND_URL}. Start the backend server.`
     );
@@ -94,7 +94,7 @@ export async function executeMcpTool(
       },
       body: JSON.stringify({ name, args }),
     });
-  } catch (error) {
+  } catch {
     throw new Error(
       `MCP backend is not reachable at ${BACKEND_URL}. Start the backend server.`
     );

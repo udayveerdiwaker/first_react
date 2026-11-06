@@ -302,7 +302,9 @@ export async function reconnectGenerationStream(
           }
           onChunk(fullText);
         }
-      } catch {}
+      } catch {
+        // Ignore parse errors on stream fragments
+      }
     }
   }
 

@@ -30,25 +30,37 @@ export default function ShareModal({ chat, onClose }: ShareModalProps) {
   // Generate a mock clean shareable URL
   const shareUrl = useMemo(() => {
     if (!chat) return "";
-    const hash = Math.random().toString(36).substring(2, 10);
-    return `${window.location.origin}/share/${hash}`;
+    const seed = `${chat.title || "chat"}-${chat.updatedAt || 0}`;
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0;
+    }
+    const hashStr = Math.abs(hash).toString(36).padEnd(8, "x").slice(0, 8);
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    return `${origin}/share/${hashStr}`;
   }, [chat]);
 
-  if (!chat) return null;
-
-  const messages = chat.messages || [];
-  const messageCount = messages.length;
-  const title = chat.title || "Untitled Conversation";
+  const messages = chat?.messages;
+  const title = chat?.title || "Untitled Conversation";
 
   // Formatted markdown string
   const markdownContent = useMemo(() => {
-    let md = `# ${title}\n\n*Exported from ZyroChat AI Workspace on ${new Date().toLocaleString()}*\n\n---\n\n`;
+    if (!messages) return "";
+    const dateStr = chat?.updatedAt
+      ? new Date(chat.updatedAt).toLocaleString()
+      : "recent";
+    let md = `# ${title}\n\n*Exported from ZyroChat AI Workspace on ${dateStr}*\n\n---\n\n`;
     messages.forEach((msg) => {
       const author = msg.role === "user" ? "**User**" : "**ZyroChat**";
       md += `${author}:\n\n${msg.text}\n\n---\n\n`;
     });
     return md;
-  }, [title, messages]);
+  }, [title, messages, chat?.updatedAt]);
+
+  if (!chat) return null;
+
+  const messagesList = chat.messages || [];
+  const messageCount = messagesList.length;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shareUrl);
@@ -213,7 +225,7 @@ export default function ShareModal({ chat, onClose }: ShareModalProps) {
               </span>
             </div>
             <div className="max-h-40 overflow-y-auto space-y-2 pr-1 text-slate-700 dark:text-slate-300">
-              {messages.slice(0, 4).map((m, i) => (
+              {messagesList.slice(0, 4).map((m, i) => (
                 <div
                   key={i}
                   className={`rounded-lg p-2 text-xs ${

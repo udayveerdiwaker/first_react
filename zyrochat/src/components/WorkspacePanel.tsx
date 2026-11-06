@@ -145,6 +145,14 @@ export default function WorkspacePanel({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const lines = useMemo(() => content.split("\n"), [content]);
+
+  const searchMatchesCount = useMemo(() => {
+    if (!currentArtifact || !searchQuery.trim()) return 0;
+    const q = searchQuery.toLowerCase();
+    return lines.filter((l) => l.toLowerCase().includes(q)).length;
+  }, [currentArtifact, searchQuery, lines]);
+
   if (!currentArtifact) return null;
 
   const lang = (currentArtifact.language || "text").toLowerCase();
@@ -154,13 +162,6 @@ export default function WorkspacePanel({
     content.includes("<!DOCTYPE") ||
     content.includes("<html");
   const isDataFile = lang === "csv" || lang === "json";
-  const lines = content.split("\n");
-
-  const searchMatchesCount = useMemo(() => {
-    if (!searchQuery.trim()) return 0;
-    const q = searchQuery.toLowerCase();
-    return lines.filter((l) => l.toLowerCase().includes(q)).length;
-  }, [searchQuery, lines]);
 
   const handleCopy = async () => {
     try {
@@ -230,7 +231,9 @@ export default function WorkspacePanel({
           headers = Object.keys(parsed[0]);
           rows = parsed.map((item) => headers.map((h) => item[h]));
         }
-      } catch {}
+      } catch {
+        // Fallback to line-by-line format
+      }
     }
 
     if (headers.length === 0) {

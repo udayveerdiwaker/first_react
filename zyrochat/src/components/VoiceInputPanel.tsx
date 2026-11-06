@@ -62,7 +62,7 @@ export default function VoiceInputPanel({
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animFrameRef = useRef<number | null>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const silenceStartRef = useRef<number>(Date.now());
+  const silenceStartRef = useRef<number>(0);
   const finalChunksRef = useRef<string>("");
 
   const config = getArtifactConfig();

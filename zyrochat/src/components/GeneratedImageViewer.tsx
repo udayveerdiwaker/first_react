@@ -104,7 +104,9 @@ export default function GeneratedImageViewer({
     "http://localhost:5000"
   ).replace(/\/$/, "");
 
-  const fullImageUrl = imageGeneration.imageUrl?.startsWith("http")
+  const fullImageUrl = !imageGeneration.imageUrl
+    ? ""
+    : imageGeneration.imageUrl.startsWith("http")
     ? imageGeneration.imageUrl
     : `${backendUrl}${imageGeneration.imageUrl}`;
 
@@ -115,14 +117,20 @@ export default function GeneratedImageViewer({
   // Multi-image list resolution
   const allImages: string[] = (() => {
     if (imageGenerations && imageGenerations.length > 0) {
-      return imageGenerations.map((gen: ImageGenerationInfo) =>
-        gen.imageUrl?.startsWith("http") ? gen.imageUrl : `${backendUrl}${gen.imageUrl}`
-      );
+      return imageGenerations
+        .map((gen: ImageGenerationInfo) => {
+          if (!gen.imageUrl) return "";
+          return gen.imageUrl.startsWith("http") ? gen.imageUrl : `${backendUrl}${gen.imageUrl}`;
+        })
+        .filter(Boolean);
     }
     if (imageGeneration.images && imageGeneration.images.length > 0) {
-      return imageGeneration.images.map((url: string) =>
-        url.startsWith("http") ? url : `${backendUrl}${url}`
-      );
+      return imageGeneration.images
+        .map((url: string) => {
+          if (!url) return "";
+          return url.startsWith("http") ? url : `${backendUrl}${url}`;
+        })
+        .filter(Boolean);
     }
     return fullImageUrl ? [fullImageUrl] : [];
   })();

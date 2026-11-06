@@ -260,7 +260,7 @@ export function saveArtifact(
     const existing = artifacts[existingIdx];
     const isChanged = existing.content !== artifact.content;
 
-    let updatedVersions = [...(existing.versions || [])];
+    const updatedVersions = [...(existing.versions || [])];
     let nextVersion = existing.version || 1;
 
     if (isChanged) {
